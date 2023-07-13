@@ -168,19 +168,19 @@ namespace HS2_StudioCharaSwitch
             }
             GUI.color = oldColor;
 
-            var cec = StudioCharaSwitchMgr.Instance.GetEditorController(ociTarget);
-            if (ociTarget == null || cec == null)
-            {
-                GUILayout.FlexibleSpace();
-                GUILayout.BeginHorizontal();
-                GUILayout.FlexibleSpace();
-                GUILayout.Label("<color=#00ffff>" + LC("Please select a charactor to edit.") + "</color>", largeLabel);
-                GUILayout.FlexibleSpace();
-                GUILayout.EndHorizontal();
-                GUILayout.FlexibleSpace();
+            //var cec = StudioCharaSwitchMgr.Instance.GetEditorController(ociTarget);
+            //if (ociTarget == null || cec == null)
+            //{
+            //    GUILayout.FlexibleSpace();
+            //    GUILayout.BeginHorizontal();
+            //    GUILayout.FlexibleSpace();
+            //    GUILayout.Label("<color=#00ffff>" + LC("Please select a charactor to edit.") + "</color>", largeLabel);
+            //    GUILayout.FlexibleSpace();
+            //    GUILayout.EndHorizontal();
+            //    GUILayout.FlexibleSpace();
 
-                return;
-            }
+            //    return;
+            //}
 
             GUILayout.BeginHorizontal();
             // LEFT area
@@ -192,25 +192,69 @@ namespace HS2_StudioCharaSwitch
             //var oldColor = GUI.color;
             if (GUILayout.Button(LC("测试随机换人")))
             {
-                //catelogIndex1 = c1;
-                //detailPageSelect = SelectMode.Normal;
 
-                var dirInfo = new DirectoryInfo(@"E:\BaiduSyncdisk\HS2 [人物卡共用]\腋猫子 [5]");
+                //var dirInfo = new DirectoryInfo(@"E:\BaiduSyncdisk\HS2 [人物卡共用]\腋猫子 [5]");
 
-                List<string> charaPathArr = CharaPathArr;
-                charaPathArr.Clear();
-                foreach (FileInfo item in from x in dirInfo.GetFiles()
-                                          orderby x.LastWriteTime descending
-                                          select x)
+                //List<string> charaPathArr = CharaPathArr;
+                //charaPathArr.Clear();
+                //foreach (FileInfo item in from x in dirInfo.GetFiles()
+                //                          orderby x.LastWriteTime descending
+                //                          select x)
+                //{
+                //    if (item.Extension.ToLower() == ".png")
+                //    {
+                //        charaPathArr.Add(item.FullName);
+                //    }
+                //}
+
+                // 测试 获取整个树
+                var dicInfo = Studio.Studio.Instance.dicInfo;
+                StudioCharaSwitchPlugin.Logger.LogDebug($@"获取整个树：
+                    数量：{dicInfo.Count}
+                    ");
+
+                var array2 = GuideObjectManager.Instance.selectObjectKey.Select(x => Studio.Studio.GetCtrlInfo(x)).Where(x => x != null).ToList();
+
+                //{ JsonConvert.SerializeObject(item) }
+                foreach (var item in array2)
                 {
-                    if (item.Extension.ToLower() == ".png")
-                    {
-                        charaPathArr.Add(item.FullName);
-                    }
+                    StudioCharaSwitchPlugin.Logger.LogDebug($@"获取选中物体：
+                     kind { item.kind }
+                     kinds { string.Join(",", item.kinds) }
+                     ToString() { string.Join(",", item.ToString()) }
+                     objectInfo { item.objectInfo.ToString() }
+                     objectInfo.dicKey { item.objectInfo.dicKey }
+                     objectInfo.treeState { item.objectInfo.treeState }
+                     objectInfo.visible { item.objectInfo.visible }
+                     treeNodeObject { item.treeNodeObject.ToString()}
+                     treeNodeObject.name { item.treeNodeObject.name}
+                     treeNodeObject.textName { item.treeNodeObject.textName}
+                     treeNodeObject.tag { item.treeNodeObject.tag}
+                     treeNodeObject.treeNode { item.treeNodeObject.treeNode}
+                     treeNodeObject.childCount { item.treeNodeObject.childCount }
+                     treeNodeObject.enableAddChild { item.treeNodeObject.enableAddChild }
+
+                    ");
                 }
+
+
 
                 // 获取选中人物
                 var array = GuideObjectManager.Instance.selectObjectKey.Select(x => Studio.Studio.GetCtrlInfo(x) as OCIChar).Where(x => x != null).ToList();
+
+                foreach (var item in array)
+                {
+
+                    StudioCharaSwitchPlugin.Logger.LogDebug($@"获取选中人物物体：
+                     sex { item.sex }
+                     charFileStatus { item.charFileStatus }
+                     charInfo { item.charInfo }
+                     oiCharInfo { item.oiCharInfo }
+                    ");
+                    item.ChangeChara(@"E:\BaiduSyncdisk\HS2 [人物卡共用]\new [3]\AISChaF_20200101123928407.png");
+                }
+
+
 
                 //OCIChar[] array = (from v in Singleton<GuideObjectManager>.Instance.selectObjectKey.Select(delegate (int v)
                 //{
@@ -221,15 +265,15 @@ namespace HS2_StudioCharaSwitch
                 //                   where v.get_oiCharInfo().get_sex() == _charaData.Sex
                 //                   select v).ToArray();
 
-                int num = array.Count;
-                for (int i = 0; i < num; i++)
-                {
-                    array[i].ChangeChara("pngpath");
-                }
-                if (num > 0)
-                {
-                    //ItemComa<string>.Loader.HideOrShowPanel();
-                }
+                //int num = array.Count;
+                //for (int i = 0; i < num; i++)
+                //{
+                //    array[i].ChangeChara("pngpath");
+                //}
+                //if (num > 0)
+                //{
+                //    //ItemComa<string>.Loader.HideOrShowPanel();
+                //}
 
             }
             //GUI.color = oldColor;
