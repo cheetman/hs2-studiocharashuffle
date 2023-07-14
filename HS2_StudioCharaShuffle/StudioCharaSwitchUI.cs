@@ -146,6 +146,8 @@ namespace HS2_StudioCharaSwitch
 
 
 
+        private Vector2 leftScroll = Vector2.zero;
+        private Vector2 rightScroll = Vector2.zero;
         public List<string> CharaPathArr { get; private set; } = new List<string>();
 
         private void guiEditorMain()
@@ -154,19 +156,13 @@ namespace HS2_StudioCharaSwitch
             float fullh = windowRect.height - 20;
             float leftw = 150;
             float rightw = fullw - 8 - leftw - 5;
-            GUIStyle cat1btnstyle = new GUIStyle("button");
 
 
 
-            // 关闭按钮
-            var cbRect = new Rect(windowRect.width - 16, 3, 13, 13);
-            var oldColor = GUI.color;
-            GUI.color = Color.red;
-            if (GUI.Button(cbRect, ""))
-            {
-                IsVisible = false;
-            }
-            GUI.color = oldColor;
+
+
+
+
 
             //var cec = StudioCharaSwitchMgr.Instance.GetEditorController(ociTarget);
             //if (ociTarget == null || cec == null)
@@ -182,16 +178,21 @@ namespace HS2_StudioCharaSwitch
             //    return;
             //}
 
+            var oldColor = GUI.color;
             GUILayout.BeginHorizontal();
             // LEFT area
             GUILayout.BeginVertical(GUILayout.Width(leftw + 8));
             // catelog1 select
-            GUILayout.BeginHorizontal();
 
 
             //var oldColor = GUI.color;
             if (GUILayout.Button(LC("测试随机换人")))
             {
+
+                Utils.BuildTreeCharaInfoList();
+
+
+                //return;
 
                 //var dirInfo = new DirectoryInfo(@"E:\BaiduSyncdisk\HS2 [人物卡共用]\腋猫子 [5]");
 
@@ -209,7 +210,7 @@ namespace HS2_StudioCharaSwitch
 
                 // 测试 获取整个树
                 var dicInfo = Studio.Studio.Instance.dicInfo;
-                StudioCharaSwitchPlugin.Logger.LogDebug($@"获取整个树：
+                StudioCharaSwitchPlugin.Logger.LogInfo($@"获取整个树：
                     数量：{dicInfo.Count}
                     ");
 
@@ -218,7 +219,7 @@ namespace HS2_StudioCharaSwitch
                 //{ JsonConvert.SerializeObject(item) }
                 foreach (var item in array2)
                 {
-                    StudioCharaSwitchPlugin.Logger.LogDebug($@"获取选中物体：
+                    StudioCharaSwitchPlugin.Logger.LogInfo($@"获取选中物体：
                      kind { item.kind }
                      kinds { string.Join(",", item.kinds) }
                      ToString() { string.Join(",", item.ToString()) }
@@ -228,6 +229,7 @@ namespace HS2_StudioCharaSwitch
                      objectInfo.visible { item.objectInfo.visible }
                      treeNodeObject { item.treeNodeObject.ToString()}
                      treeNodeObject.name { item.treeNodeObject.name}
+                     treeNodeObject.visible { item.treeNodeObject.visible}
                      treeNodeObject.textName { item.treeNodeObject.textName}
                      treeNodeObject.tag { item.treeNodeObject.tag}
                      treeNodeObject.treeNode { item.treeNodeObject.treeNode}
@@ -245,13 +247,13 @@ namespace HS2_StudioCharaSwitch
                 foreach (var item in array)
                 {
 
-                    StudioCharaSwitchPlugin.Logger.LogDebug($@"获取选中人物物体：
+                    StudioCharaSwitchPlugin.Logger.LogInfo($@"获取选中人物物体：
                      sex { item.sex }
                      charFileStatus { item.charFileStatus }
                      charInfo { item.charInfo }
                      oiCharInfo { item.oiCharInfo }
                     ");
-                    item.ChangeChara(@"E:\BaiduSyncdisk\HS2 [人物卡共用]\new [3]\AISChaF_20200101123928407.png");
+                    //item.ChangeChara(@"E:\BaiduSyncdisk\HS2 [人物卡共用]\new [3]\AISChaF_20200101123928407.png");
                 }
 
 
@@ -279,7 +281,112 @@ namespace HS2_StudioCharaSwitch
             //GUI.color = oldColor;
 
 
+            leftScroll = GUILayout.BeginScrollView(leftScroll, GUI.skin.box);
 
+            foreach (var item in Utils.GetTreeCharaInfoDic())
+            {
+                GUILayout.BeginHorizontal();
+                GUILayout.Label($"{item.Key}");
+                GUILayout.FlexibleSpace();
+                GUILayout.EndHorizontal();
+
+                foreach (var info in item.Value)
+                {
+                    if (!IsVisible)
+                    {
+                        GUI.color = Color.yellow; ;
+                    }
+                    bool IsSelected = GUILayout.Toggle(info.IsSelected, $" {(info.Sex == 1 ? "[女]" : "[男]")} {info.Name}");
+                    if (IsSelected != info.IsSelected)
+                    {
+                        info.IsSelected = IsSelected;
+                    }
+                    GUI.color = oldColor;
+
+
+                }
+            }
+
+            GUILayout.EndScrollView();
+
+
+            if (GUILayout.Button(LC("随机人物卡")))
+            {
+
+            }
+
+            if (GUILayout.Button(LC("随机服装卡")))
+            {
+
+            }
+            if (GUILayout.Button(LC("设置")))
+            {
+
+            }
+
+            GUILayout.EndVertical();
+
+
+            GUILayout.BeginVertical();
+
+
+
+            rightScroll = GUILayout.BeginScrollView(rightScroll, GUI.skin.box);
+
+            GUILayout.BeginHorizontal();
+            GUILayout.Label(LC("人物卡随机目录"), GUI.skin.box);
+            GUILayout.EndHorizontal();
+
+
+            GUILayout.BeginHorizontal();
+            GUILayout.Label(LC("路径："), GUILayout.Width(200));
+            GUILayout.Label(LC("子目录"), GUILayout.Width(30));
+            GUILayout.Label(LC("权重"), GUILayout.Width(30));
+
+            GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
+
+
+            string newTxtV = GUILayout.TextField(@"D:\Cache\QQ\文件接收\", GUILayout.Width(200));
+            if (GUILayout.Button(LC("包含"), GUILayout.Width(30)))
+            {
+
+            }
+
+            newTxtV = GUILayout.TextField(@"50%", GUILayout.Width(30));
+            if (GUILayout.Button(LC("选择目录"), GUILayout.Width(30)))
+            {
+
+            }
+
+            GUILayout.FlexibleSpace();
+
+            if (GUILayout.Button(LC("+"), GUILayout.Width(50)))
+            {
+
+            }
+
+
+            GUILayout.BeginHorizontal();
+            GUILayout.Label(LC("服装卡随机目录"), GUI.skin.box);
+            GUILayout.EndHorizontal();
+
+            GUILayout.EndScrollView();
+
+
+            GUILayout.EndVertical();
+
+
+            GUILayout.EndHorizontal();
+
+            // 关闭按钮
+            var cbRect = new Rect(windowRect.width - 16, 3, 13, 13);
+            GUI.color = Color.red;
+            if (GUI.Button(cbRect, ""))
+            {
+                IsVisible = false;
+            }
+            GUI.color = oldColor;
         }
 
 
