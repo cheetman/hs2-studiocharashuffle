@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace HS2_StudioCharaSwitch
+namespace HS2_StudioCharaShuffle
 {
     public class CharaDetailInfo
     {

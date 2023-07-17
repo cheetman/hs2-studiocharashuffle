@@ -1,12 +1,14 @@
-﻿using Studio;
+﻿using BepInEx;
+using Studio;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using static Studio.TreeNodeObject;
 
-namespace HS2_StudioCharaSwitch
+namespace HS2_StudioCharaShuffle
 {
     public class Utils
     {
@@ -18,7 +20,7 @@ namespace HS2_StudioCharaSwitch
             public string TreePath { get; set; }
             public TreeState TreeState { get; set; }
             public bool IsVisible { get; set; }
-            public bool IsSelected { get; set; }
+            public bool IsSelected { get; set; } = true;
         }
 
         public static List<TreeCharaInfo> TreeCharaInfos = new List<TreeCharaInfo>();
@@ -94,5 +96,19 @@ namespace HS2_StudioCharaSwitch
             TreeCharaInfosDic = tmpTreeCharaInfosDic;
 
         }
+
+
+        static public string GetCharaPath(byte sex)
+        {
+            //string exportPath = StudioCharaEditor.CharaExportPath.Value;
+            string defPath = Path.Combine(Paths.GameRootPath, sex == 0 ? "UserData\\chara\\male" : "UserData\\chara\\female");
+            //if (exportPath.Contains(StudioCharaEditor.DefaultPathMacro))
+            //{
+            //    exportPath = exportPath.Replace(StudioCharaEditor.DefaultPathMacro, defPath);
+            //}
+            return defPath;
+        }
+
+    
     }
 }

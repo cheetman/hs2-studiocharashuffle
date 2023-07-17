@@ -8,7 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
 
-namespace HS2_StudioCharaSwitch
+namespace HS2_StudioCharaShuffle
 {
 
 
@@ -16,8 +16,8 @@ namespace HS2_StudioCharaSwitch
     public class StudioCharaSwitchPlugin : BaseUnityPlugin
     {
 
-        public const string GUID = "Cheatman.StudioCharaSwitch.HS2";
-        public const string Name = "Studio Chara Switch";
+        public const string GUID = "Cheatman.StudioCharaShuffle.HS2";
+        public const string Name = "Studio Chara Shuffle";
         public const string Version = "0.1.0";
 
         public static StudioCharaSwitchPlugin Instance { get; private set; }

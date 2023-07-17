@@ -1,4 +1,5 @@
 ﻿using BepInEx.Logging;
+using KKAPI.Utilities;
 using Studio;
 using System;
 using System.Collections.Generic;
@@ -10,9 +11,9 @@ using System.Threading.Tasks;
 using UnityEngine;
 using WearCustom;
 
-namespace HS2_StudioCharaSwitch
+namespace HS2_StudioCharaShuffle
 {
-    public class StudioCharaSwitchUI : MonoBehaviour
+    public class UI : MonoBehaviour
     {
 
         private readonly int windowID = 10564;
@@ -31,7 +32,7 @@ namespace HS2_StudioCharaSwitch
         private GUIStyle largeLabel;
         private GUIStyle btnstyle;
 
-
+        private UIModel Model = UIModel.GetInstance();
 
 
 
@@ -44,6 +45,9 @@ namespace HS2_StudioCharaSwitch
             largeLabel.fontSize = 16;
             btnstyle = new GUIStyle("button");
             btnstyle.fontSize = 16;
+
+
+            Model.Main.CharaPath = @"D:\Cache\QQ\文件接收\";
 
         }
 
@@ -186,7 +190,7 @@ namespace HS2_StudioCharaSwitch
 
 
             //var oldColor = GUI.color;
-            if (GUILayout.Button(LC("测试随机换人")))
+            if (GUILayout.Button(LC("刷新")))
             {
 
                 Utils.BuildTreeCharaInfoList();
@@ -312,17 +316,64 @@ namespace HS2_StudioCharaSwitch
 
             if (GUILayout.Button(LC("随机人物卡")))
             {
+                foreach(var item in Utils.GetTreeCharaInfoDic())
+                {
+                    foreach(var chara in item.Value.Where(x=>x.IsSelected))
+                    {
 
+                        var obj = Studio.Studio.GetCtrlInfo(chara.Index) as OCIChar;
+                        if(obj != null)
+                        {
+                            obj.ChangeChara(@"E:\BaiduSyncdisk\HS2 [人物卡共用]\new [3]\AISChaF_20200101123928407.png");
+                        }
+
+                    }
+                }
+            }
+
+            if (GUILayout.Button(LC("随机人物外形")))
+            {
+                foreach (var item in Utils.GetTreeCharaInfoDic())
+                {
+                    foreach (var chara in item.Value.Where(x => x.IsSelected))
+                    {
+
+                        var obj = Studio.Studio.GetCtrlInfo(chara.Index) as OCIChar;
+                        if (obj != null)
+                        {
+
+                            LoadAnatomy(@"E:\BaiduSyncdisk\HS2 [人物卡共用]\new [3]\AISChaF_20200101123928407.png");
+                            ////obj.ChangeChara(@"E:\BaiduSyncdisk\HS2 [人物卡共用]\new [3]\AISChaF_20200101123928407.png");
+                        }
+
+                    }
+                }
             }
 
             if (GUILayout.Button(LC("随机服装卡")))
             {
 
-            }
-            if (GUILayout.Button(LC("设置")))
-            {
+                foreach (var item in Utils.GetTreeCharaInfoDic())
+                {
+                    foreach (var chara in item.Value.Where(x => x.IsSelected))
+                    {
+
+                        var obj = Studio.Studio.GetCtrlInfo(chara.Index) as OCIChar;
+                        if (obj != null)
+                        {
+                            obj.LoadClothesFile(@"E:\BaiduSyncdisk\HS2 [服装卡共用]\其他整合包 [睡衣]\601976_AISCoordeF_20200119165737565.png");
+                        }
+
+                    }
+                }
+
+
 
             }
+            //if (GUILayout.Button(LC("设置")))
+            //{
+
+            //}
 
             GUILayout.EndVertical();
 
@@ -339,37 +390,173 @@ namespace HS2_StudioCharaSwitch
 
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label(LC("路径："), GUILayout.Width(200));
-            GUILayout.Label(LC("子目录"), GUILayout.Width(30));
-            GUILayout.Label(LC("权重"), GUILayout.Width(30));
+            GUILayout.Label(LC("路径："), GUILayout.Width(250));
+            //GUILayout.Label(LC("子目录"), GUILayout.Width(30));
+            //GUILayout.Label(LC("权重"), GUILayout.Width(30));
 
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
 
 
-            string newTxtV = GUILayout.TextField(@"D:\Cache\QQ\文件接收\", GUILayout.Width(200));
-            if (GUILayout.Button(LC("包含"), GUILayout.Width(30)))
-            {
+            GUILayout.BeginHorizontal();
+            string newTxtV = GUILayout.TextField(Model.Main.CharaPath, GUILayout.Width(250));
 
-            }
-
-            newTxtV = GUILayout.TextField(@"50%", GUILayout.Width(30));
-            if (GUILayout.Button(LC("选择目录"), GUILayout.Width(30)))
+            if (GUILayout.Button(LC("选择目录"), GUILayout.Width(120)))
             {
+                var savingPath = Utils.GetCharaPath(1);
+                OpenFileDialog.Show((files) =>
+                {
+                    if (files != null && files.Length > 0)
+                    {
+                        string pathname = files[0];
+                        Model.Main.CharaPath = Path.GetDirectoryName(pathname);
+                        //savingFilename = Path.GetFileName(pathname);
+                        //if (!Path.GetExtension(pathname).ToLower().Equals(".png"))
+                        //{
+                        //    savingFilename += ".png";
+                        //}
+
+
+                        StudioCharaSwitchPlugin.Logger.LogInfo($"路径：{savingPath}");
+
+                    }
+                }, "Save Charactor", savingPath, "Images (*.png)|*.png|All files|*.*", ".png", OpenFileDialog.OpenSaveFileDialgueFlags.OFN_EXPLORER | OpenFileDialog.OpenSaveFileDialgueFlags.OFN_LONGNAMES);
 
             }
 
             GUILayout.FlexibleSpace();
 
-            if (GUILayout.Button(LC("+"), GUILayout.Width(50)))
-            {
+            //if (GUILayout.Button(LC("+"), GUILayout.Width(50)))
+            //{
 
+            //}
+
+            GUILayout.EndHorizontal();
+
+
+
+            //GUILayout.Label(LC("是否包含子路径："), GUILayout.Width(200));
+            bool IsChecked = GUILayout.Toggle(Model.Main.CharaIsSub, $"是否包含子目录");
+            if (IsChecked != Model.Main.CharaIsSub)
+            {
+                Model.Main.CharaIsSub = IsChecked;
             }
+
+            IsChecked = GUILayout.Toggle(Model.Main.CharaIsAuto, "是否自动更换");
+            if (IsChecked != Model.Main.CharaIsAuto)
+            {
+                Model.Main.CharaIsAuto = IsChecked;
+            }
+            if (IsChecked)
+            {
+                GUILayout.BeginHorizontal();
+                GUILayout.Label(LC("频率："), GUILayout.Width(80));
+                float newValue = GUILayout.HorizontalSlider(Model.Main.CharaAutoTime, 10f, 600f, GUILayout.Width(80));
+                int newValueI = (int)newValue;
+                if (newValueI != Model.Main.CharaAutoTime)
+                {
+                    Model.Main.CharaAutoTime = newValueI;
+                }
+                GUILayout.Label($"{newValueI}秒");
+
+
+                GUILayout.EndHorizontal();
+            }
+
+
+
 
 
             GUILayout.BeginHorizontal();
             GUILayout.Label(LC("服装卡随机目录"), GUI.skin.box);
             GUILayout.EndHorizontal();
+
+
+
+            GUILayout.BeginHorizontal();
+            GUILayout.Label(LC("路径："), GUILayout.Width(250));
+            //GUILayout.Label(LC("子目录"), GUILayout.Width(30));
+            //GUILayout.Label(LC("权重"), GUILayout.Width(30));
+
+            GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
+
+
+            GUILayout.BeginHorizontal();
+            newTxtV = GUILayout.TextField(Model.Main.CoordPath, GUILayout.Width(250));
+
+            if (GUILayout.Button(LC("选择目录"), GUILayout.Width(120)))
+            {
+                var savingPath = Utils.GetCharaPath(1);
+                OpenFileDialog.Show((files) =>
+                {
+                    if (files != null && files.Length > 0)
+                    {
+                        string pathname = files[0];
+                        Model.Main.CoordPath = Path.GetDirectoryName(pathname);
+                        //savingFilename = Path.GetFileName(pathname);
+                        //if (!Path.GetExtension(pathname).ToLower().Equals(".png"))
+                        //{
+                        //    savingFilename += ".png";
+                        //}
+
+
+                        StudioCharaSwitchPlugin.Logger.LogInfo($"路径：{savingPath}");
+
+                    }
+                }, "Save Charactor", savingPath, "Images (*.png)|*.png|All files|*.*", ".png", OpenFileDialog.OpenSaveFileDialgueFlags.OFN_EXPLORER | OpenFileDialog.OpenSaveFileDialgueFlags.OFN_LONGNAMES);
+
+            }
+
+            GUILayout.FlexibleSpace();
+
+            //if (GUILayout.Button(LC("+"), GUILayout.Width(50)))
+            //{
+
+            //}
+
+            GUILayout.EndHorizontal();
+
+
+
+            //GUILayout.Label(LC("是否包含子路径："), GUILayout.Width(200));
+            IsChecked = GUILayout.Toggle(Model.Main.CoordIsSub, $"是否包含子目录");
+            if (IsChecked != Model.Main.CoordIsSub)
+            {
+                Model.Main.CoordIsSub = IsChecked;
+            }
+
+
+
+            IsChecked = GUILayout.Toggle(Model.Main.CoordIsAuto, Model.Main.CoordIsAuto ? greenText("是否自动更换") : "是否自动更换");
+            if (IsChecked != Model.Main.CoordIsAuto)
+            {
+                Model.Main.CoordIsAuto = IsChecked;
+            }
+            if (IsChecked)
+            {
+                GUILayout.BeginHorizontal();
+                GUILayout.Label(LC("频率："), GUILayout.Width(80));
+                float newValue = GUILayout.HorizontalSlider(Model.Main.CoordAutoTime, 10f, 600f, GUILayout.Width(80));
+                int newValueI = (int)newValue;
+                if (newValueI != Model.Main.CoordAutoTime)
+                {
+                    Model.Main.CoordAutoTime = newValueI;
+                }
+                GUILayout.Label($"{newValueI}秒");
+
+
+                GUILayout.EndHorizontal();
+            }
+
+            GUILayout.BeginHorizontal();
+            GUILayout.EndHorizontal();
+
+
+
+
+
+
 
             GUILayout.EndScrollView();
 
@@ -453,6 +640,14 @@ namespace HS2_StudioCharaSwitch
         private static readonly bool[] outfit = new bool[5] { false, false, false, true, true };
 
 
+        private string greenText(string text)
+        {
+            return colorText(text, "00ff00");
+        }
+        private string colorText(string text, string color = "ffffff")
+        {
+            return "<color=#" + color + ">" + text + "</color>";
+        }
 
 
         private static Type _studioCharaListUtilType;

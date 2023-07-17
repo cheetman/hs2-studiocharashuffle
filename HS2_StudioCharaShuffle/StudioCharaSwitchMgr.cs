@@ -9,12 +9,12 @@ using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
 
-namespace HS2_StudioCharaSwitch
+namespace HS2_StudioCharaShuffle
 {
    public  class StudioCharaSwitchMgr : MonoBehaviour
     {
 
-        public StudioCharaSwitchUI gui;
+        public UI gui;
         public static StudioCharaSwitchMgr Instance { get; private set; }
 
         public Dictionary<OCIChar, CharaController> charaEditorCtrlDict = new Dictionary<OCIChar, CharaController>();
@@ -45,7 +45,7 @@ namespace HS2_StudioCharaSwitch
             yield return null;
 
             // start ui
-            gui = new GameObject("GUI").AddComponent<StudioCharaSwitchUI>();
+            gui = new GameObject("GUI").AddComponent<UI>();
             gui.transform.parent = base.transform;
             gui.IsVisible = false;
             //Console.WriteLine("StudioCharaEditor CharaEditorMgr Started.");

@@ -7,8 +7,8 @@
     <ProjectGuid>{7B5C7281-30AC-46E9-9E87-E9B7C839D935}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>HS2_StudioCharaSwitch</RootNamespace>
-    <AssemblyName>HS2_StudioCharaSwitch</AssemblyName>
+    <RootNamespace>HS2_StudioCharaShuffle</RootNamespace>
+    <AssemblyName>HS2_StudioCharaShuffle</AssemblyName>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
@@ -78,7 +78,8 @@
   <ItemGroup>
     <Compile Include="CharaController.cs" />
     <Compile Include="CharaDetailInfo.cs" />
-    <Compile Include="StudioCharaSwitchUI.cs" />
+    <Compile Include="UI\UIModel.cs" />
+    <Compile Include="UI\UI.cs" />
     <Compile Include="StudioCharaSwitchMgr.cs" />
     <Compile Include="StudioCharaSwitchPlugin.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
