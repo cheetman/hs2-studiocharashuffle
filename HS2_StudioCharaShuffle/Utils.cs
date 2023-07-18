@@ -1,4 +1,6 @@
-﻿using BepInEx;
+﻿using AIChara;
+using BepInEx;
+using MessagePack;
 using Studio;
 using System;
 using System.Collections.Generic;
@@ -26,12 +28,69 @@ namespace HS2_StudioCharaShuffle
         public static List<TreeCharaInfo> TreeCharaInfos = new List<TreeCharaInfo>();
         public static Dictionary<string, List<TreeCharaInfo>> TreeCharaInfosDic = new Dictionary<string, List<TreeCharaInfo>>();
 
+        public static List<string> CharaCardPaths = new List<string>();
+        public static List<string> CoordCardPaths = new List<string>();
 
 
-        //public static List<TreeCharaInfo> GetTreeCharaInfoList()
-        //{
-        //    return TreeCharaInfos;
-        //}
+
+
+
+        public static List<string> GetCharaCards()
+        {
+            return CharaCardPaths;
+        }
+
+        public static int BuildCharaCardPaths(string path,int maxDepth = 1)
+        {
+            CharaCardPaths.Clear();
+            TraverseCharaDirectory(path, 0, maxDepth);
+            return CharaCardPaths.Count;
+        }
+
+        static void TraverseCharaDirectory(string directory, int depth,int maxDepth)
+        {
+            try
+            {
+                // 设置最大深度为 3
+                //int maxDepth = maxDepth;
+
+                // 获取当前目录下的所有 .png 文件
+                string[] pngFiles = Directory.GetFiles(directory, "*.png");
+
+                // 处理当前目录下的 .png 文件
+                foreach (string file in pngFiles)
+                {
+                   var isPng = GetPng(file);
+                    if (isPng)
+                    {
+                        CharaCardPaths.Add(file);
+                        StudioCharaSwitchPlugin.Logger.LogInfo("人物卡: " + file);
+                    }
+                }
+
+                // 获取当前目录下的所有子目录
+                string[] subDirectories = Directory.GetDirectories(directory);
+
+                // 递归遍历子目录，但限制深度
+                if (depth < maxDepth)
+                {
+                    foreach (string subDirectory in subDirectories)
+                    {
+                        TraverseCharaDirectory(subDirectory, depth + 1, maxDepth);
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                StudioCharaSwitchPlugin.Logger.LogWarning("发生错误: " + e.Message);
+            }
+        }
+
+
+
+
+
+
         public static Dictionary<string, List<TreeCharaInfo>>  GetTreeCharaInfoDic()
         {
             return TreeCharaInfosDic;
@@ -109,6 +168,110 @@ namespace HS2_StudioCharaShuffle
             return defPath;
         }
 
-    
+
+        static public bool GetPng(string filepath)
+        {
+            var noLoadPNG = false;
+            byte[] pngData;
+
+            using (var st = new FileStream(filepath, FileMode.Open, FileAccess.Read))
+            {
+                using (var br = new BinaryReader(st))
+                {
+                    int num = (int)GetPngSize(br);
+                    if (num != 0)
+                    {
+                        //item.GetPngData(br, num);
+
+                        if (noLoadPNG)
+                        {
+                            br.BaseStream.Seek(num, SeekOrigin.Current);
+                        }
+                        else
+                        {
+                            pngData = br.ReadBytes((int)num);
+                        }
+                        if (br.BaseStream.Length - br.BaseStream.Position == 0L)
+                        {
+                            //lastLoadErrorCode = -5;
+                            return false;
+                        }
+                    }
+                    try
+                    {
+                        if (br.ReadInt32() > 100)
+                        {
+                            return false;
+                        }
+                        if (br.ReadString() != "【AIS_Chara】")
+                        {
+                            return false;
+                        }
+                        if (new Version(br.ReadString()) > ChaFileDefine.ChaFileVersion)
+                        {
+                            return false;
+                        }
+                        br.ReadInt32();
+                        br.ReadString();
+                        br.ReadString();
+                        int count = br.ReadInt32();
+                        BlockHeader blockHeader = MessagePackSerializer.Deserialize<BlockHeader>(br.ReadBytes(count));
+                        br.ReadInt64();
+                        long position = br.BaseStream.Position;
+                        BlockHeader.Info info = blockHeader.SearchInfo(ChaFileParameter.BlockName);
+                        if (new Version(info.version) > ChaFileDefine.ChaFileParameterVersion)
+                        {
+                            //item.EvoVersion = true;
+                            return true;
+                        }
+                        br.BaseStream.Seek(position + info.pos, SeekOrigin.Begin);
+                        ChaFileParameter chaFileParameter = MessagePackSerializer.Deserialize<ChaFileParameter>(br.ReadBytes((int)info.size));
+                        //item.Sex = chaFileParameter.sex;
+                        //item.CharaName = chaFileParameter.fullname;
+                        return true;
+                    }
+                    catch
+                    {
+                        return false;
+                    }
+                }
+            }
+        }
+
+
+        public static int Big2LittleInt32(int big)
+        {
+            return ((big >> 24) & 0xFF) | ((big >> 8) & 0xFF00) | ((big << 8) & 0xFF0000) | (big << 24);
+        }
+
+
+        public static long GetPngSize(BinaryReader br)
+        {
+            long result = 0L;
+            Stream baseStream = br.BaseStream;
+            long position = baseStream.Position;
+            try
+            {
+                if (br.ReadInt64() == 727905341920923785L)
+                {
+                    int num2;
+                    do
+                    {
+                        int num = Big2LittleInt32(br.ReadInt32());
+                        num2 = br.ReadInt32();
+                        baseStream.Position += num + 4;
+                    }
+                    while (num2 != 1145980233);
+                    return baseStream.Position - position;
+                }
+                return result;
+            }
+            finally
+            {
+                baseStream.Position = position;
+            }
+        }
+
+
     }
 }

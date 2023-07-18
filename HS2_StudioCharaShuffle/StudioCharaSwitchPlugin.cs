@@ -12,9 +12,17 @@ namespace HS2_StudioCharaShuffle
 {
 
 
+
     [BepInPlugin(GUID, Name, Version)]
     public class StudioCharaSwitchPlugin : BaseUnityPlugin
     {
+
+        //static void Main(string[] args)
+        //{
+        //    Utils.GetPng();
+        //}
+
+
 
         public const string GUID = "Cheatman.StudioCharaShuffle.HS2";
         public const string Name = "Studio Chara Shuffle";
@@ -42,7 +50,7 @@ namespace HS2_StudioCharaShuffle
 
             UIHotKeyShow = Config.Bind("General", "快捷键", new KeyboardShortcut(KeyCode.R, KeyCode.LeftShift), "Toggles the main UI on and off.");
 
-     
+
 
         }
 

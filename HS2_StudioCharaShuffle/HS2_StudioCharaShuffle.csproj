@@ -31,6 +31,9 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
+  <PropertyGroup>
+    <StartupObject />
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="Assembly-CSharp">
       <HintPath>E:\HS2 [ArcticFox]\HoneySelect2_Data\Managed\Assembly-CSharp.dll</HintPath>
@@ -46,13 +49,16 @@
     </Reference>
     <Reference Include="HS2API">
       <HintPath>E:\HS2 [ArcticFox]\BepInEx\Plugins\HS2API.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="HS2WearCustom, Version=0.4.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>E:\HS2 [ArcticFox]\BepInEx\Plugins\HS2_StudioPlugins\HS2WearCustom.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="IL">
       <HintPath>E:\HS2 [ArcticFox]\HoneySelect2_Data\Managed\IL.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />

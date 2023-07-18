@@ -1,7 +1,9 @@
-﻿using BepInEx.Logging;
+﻿using AIChara;
+using BepInEx.Logging;
 using KKAPI.Utilities;
 using Studio;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -32,12 +34,15 @@ namespace HS2_StudioCharaShuffle
         private GUIStyle largeLabel;
         private GUIStyle btnstyle;
 
-        private UIModel Model = UIModel.GetInstance();
+        private UIModel Model;
 
 
 
 
         private OCIChar ociTarget;
+        private int[] selectedTreeIndexs = new int[0];
+        private int selectedTreeIndex = 0;
+        private HashSet<int> mySelectedTreeIndexs = new HashSet<int>();
 
         private void Start()
         {
@@ -47,8 +52,36 @@ namespace HS2_StudioCharaShuffle
             btnstyle.fontSize = 16;
 
 
-            Model.Main.CharaPath = @"D:\Cache\QQ\文件接收\";
+            Model = UIModel.GetInstance();
 
+            Model.Main.CharaPath = @"D:\Cache\QQ\文件接收\";
+            Model.Main.CharaPathIsOk = true ;
+
+            Studio.Studio.Instance.treeNodeCtrl.onSelect += (TreeNodeObject treeNodeObject) =>
+            {
+                if (IsVisible)
+                {
+                    //selectedTreeIndex = GuideObjectManager.Instance.selectObjectKey;
+                    if (Studio.Studio.Instance.dicInfo.TryGetValue(treeNodeObject, out ObjectCtrlInfo obj))
+                    {
+                        selectedTreeIndex = obj.objectInfo.dicKey;
+                    }
+                    Utils.BuildTreeCharaInfoList();
+                }
+                //StudioCharaSwitchPlugin.Logger.Log(LogLevel.Warning, "onSelect");
+
+            };
+
+            Studio.Studio.Instance.treeNodeCtrl.onDelete += (treeNodeObject) =>
+            {
+
+                if (IsVisible)
+                {
+                    //selectedTreeIndex = GuideObjectManager.Instance.selectObjectKey;
+                    Utils.BuildTreeCharaInfoList();
+                    //StudioCharaSwitchPlugin.Logger.Log(LogLevel.Warning, "onDelete");
+                }
+            };
         }
 
         private void OnGUI()
@@ -115,6 +148,8 @@ namespace HS2_StudioCharaShuffle
                 IsVisible = !IsVisible;
                 if (IsVisible)
                 {
+                    Utils.BuildTreeCharaInfoList();
+
                     //CharaEditorMgr.Instance.ReloadDictionary();
                     //windowRect = new Rect(StudioCharaEditor.UIXPosition.Value, StudioCharaEditor.UIYPosition.Value, Math.Max(600, StudioCharaEditor.UIWidth.Value), Math.Max(400, StudioCharaEditor.UIHeight.Value));
                 }
@@ -128,14 +163,14 @@ namespace HS2_StudioCharaShuffle
             }
 
             // change select check
-            if (IsVisible)
-            {
-                TreeNodeObject curSel = GetCurrentSelectedNode();
-                if (curSel != lastSelectedTreeNode)
-                {
-                    OnSelectChange(curSel);
-                }
-            }
+            //if (IsVisible)
+            //{
+            //    TreeNodeObject curSel = GetCurrentSelectedNode();
+            //    if (curSel != lastSelectedTreeNode)
+            //    {
+            //        OnSelectChange(curSel);
+            //    }
+            //}
 
             // house keeping
             //StudioCharaSwitchMgr.Instance.HouseKeeping(IsVisible);
@@ -257,7 +292,6 @@ namespace HS2_StudioCharaShuffle
                      charInfo { item.charInfo }
                      oiCharInfo { item.oiCharInfo }
                     ");
-                    //item.ChangeChara(@"E:\BaiduSyncdisk\HS2 [人物卡共用]\new [3]\AISChaF_20200101123928407.png");
                 }
 
 
@@ -290,24 +324,39 @@ namespace HS2_StudioCharaShuffle
             foreach (var item in Utils.GetTreeCharaInfoDic())
             {
                 GUILayout.BeginHorizontal();
+                GUI.color = Color.gray; ;
                 GUILayout.Label($"{item.Key}");
+                GUI.color = oldColor;
                 GUILayout.FlexibleSpace();
                 GUILayout.EndHorizontal();
 
                 foreach (var info in item.Value)
                 {
-                    if (!IsVisible)
+                    //if (selectedTreeIndex.Contains(info.Index))
+                    if (selectedTreeIndex == info.Index)
+                    {
+                        GUI.color = Color.green;
+                    }
+                    else if (!info.IsVisible)
                     {
                         GUI.color = Color.yellow; ;
                     }
-                    bool IsSelected = GUILayout.Toggle(info.IsSelected, $" {(info.Sex == 1 ? "[女]" : "[男]")} {info.Name}");
-                    if (IsSelected != info.IsSelected)
+
+                    bool OldIsSelected = mySelectedTreeIndexs.Contains(info.Index);
+                    info.IsSelected = OldIsSelected; // 这行只给判断使用
+                    bool IsSelected = GUILayout.Toggle(OldIsSelected, $" {(info.Sex == 1 ? "[女]" : "[男]")} {info.Name}");
+                    if (IsSelected != OldIsSelected)
                     {
-                        info.IsSelected = IsSelected;
+                        if (IsSelected)
+                        {
+                            mySelectedTreeIndexs.Add(info.Index);
+                        }
+                        else
+                        {
+                            mySelectedTreeIndexs.Remove(info.Index);
+                        }
                     }
                     GUI.color = oldColor;
-
-
                 }
             }
 
@@ -316,15 +365,24 @@ namespace HS2_StudioCharaShuffle
 
             if (GUILayout.Button(LC("随机人物卡")))
             {
-                foreach(var item in Utils.GetTreeCharaInfoDic())
+                foreach (var item in Utils.GetTreeCharaInfoDic())
                 {
-                    foreach(var chara in item.Value.Where(x=>x.IsSelected))
+                    foreach (var chara in item.Value.Where(x => x.IsSelected))
                     {
 
                         var obj = Studio.Studio.GetCtrlInfo(chara.Index) as OCIChar;
-                        if(obj != null)
+                        if (obj != null)
                         {
-                            obj.ChangeChara(@"E:\BaiduSyncdisk\HS2 [人物卡共用]\new [3]\AISChaF_20200101123928407.png");
+                            IEnumerator MyCoroutine()
+                            {
+                                obj.ChangeChara(@"E:\BaiduSyncdisk\HS2 [人物卡共用]\金橡木 [4]\HS2ChaF_20230601215530012.png");
+                                Utils.BuildTreeCharaInfoList();
+                                yield return null;
+                            }
+
+                            StartCoroutine(MyCoroutine());
+
+
                         }
 
                     }
@@ -341,9 +399,16 @@ namespace HS2_StudioCharaShuffle
                         var obj = Studio.Studio.GetCtrlInfo(chara.Index) as OCIChar;
                         if (obj != null)
                         {
+                            IEnumerator MyCoroutine()
+                            {
+                                LoadAnatomy(@"E:\BaiduSyncdisk\HS2 [人物卡共用]\new [3]\AISChaF_20200101123928407.png", obj);
+                                ////obj.ChangeChara(@"E:\BaiduSyncdisk\HS2 [人物卡共用]\new [3]\AISChaF_20200101123928407.png");
+                                Utils.BuildTreeCharaInfoList();
+                                yield return null;
+                            }
 
-                            LoadAnatomy(@"E:\BaiduSyncdisk\HS2 [人物卡共用]\new [3]\AISChaF_20200101123928407.png");
-                            ////obj.ChangeChara(@"E:\BaiduSyncdisk\HS2 [人物卡共用]\new [3]\AISChaF_20200101123928407.png");
+                            StartCoroutine(MyCoroutine());
+
                         }
 
                     }
@@ -361,7 +426,14 @@ namespace HS2_StudioCharaShuffle
                         var obj = Studio.Studio.GetCtrlInfo(chara.Index) as OCIChar;
                         if (obj != null)
                         {
-                            obj.LoadClothesFile(@"E:\BaiduSyncdisk\HS2 [服装卡共用]\其他整合包 [睡衣]\601976_AISCoordeF_20200119165737565.png");
+                            IEnumerator MyCoroutine()
+                            {
+                                obj.LoadClothesFile(@"E:\BaiduSyncdisk\HS2 [服装卡共用]\其他整合包 [睡衣]\601976_AISCoordeF_20200119165737565.png");
+                                yield return null;
+                            }
+
+                            StartCoroutine(MyCoroutine());
+
                         }
 
                     }
@@ -399,9 +471,22 @@ namespace HS2_StudioCharaShuffle
 
 
             GUILayout.BeginHorizontal();
-            string newTxtV = GUILayout.TextField(Model.Main.CharaPath, GUILayout.Width(250));
 
-            if (GUILayout.Button(LC("选择目录"), GUILayout.Width(120)))
+            string newTxtV = string.Empty;
+            if (!Model.Main.CharaPathIsOk)
+            {
+                GUI.color = Color.red;
+                newTxtV = GUILayout.TextField(Model.Main.CharaPath, GUILayout.Width(250));
+                GUI.color = oldColor;
+            }
+            else
+            {
+                newTxtV = GUILayout.TextField(Model.Main.CharaPath, GUILayout.Width(250));
+            }
+
+
+
+            if (GUILayout.Button(LC("选择目录"), GUILayout.Width(100)))
             {
                 var savingPath = Utils.GetCharaPath(1);
                 OpenFileDialog.Show((files) =>
@@ -409,7 +494,35 @@ namespace HS2_StudioCharaShuffle
                     if (files != null && files.Length > 0)
                     {
                         string pathname = files[0];
+
+
                         Model.Main.CharaPath = Path.GetDirectoryName(pathname);
+
+                        if (!Directory.Exists(Model.Main.CharaPath))
+                        {
+                            Model.Main.CharaPathIsOk = false;
+                            Model.Main.CharaPathMessage = "目录不存在!";
+                            Model.Main.CharaCount = 0;
+                            return;
+                        }
+
+                        string rootPath = Path.GetPathRoot(Model.Main.CharaPath);
+                        // 检查所选目录是否为盘符根目录
+                        if (Model.Main.CharaPath == rootPath)
+                        {
+                            Model.Main.CharaPathIsOk = false;
+                            Model.Main.CharaPathMessage = "不允许设置为盘符根目录!";
+                            Model.Main.CharaCount = 0;
+                            return;
+                        }
+
+                        var count = Utils.BuildCharaCardPaths(Model.Main.CharaPath);
+                        Model.Main.CharaPathIsOk = true;
+                        Model.Main.CharaCount = count;
+                        StudioCharaSwitchPlugin.Logger.LogInfo($"识别人物卡数量：{count}");
+
+
+
                         //savingFilename = Path.GetFileName(pathname);
                         //if (!Path.GetExtension(pathname).ToLower().Equals(".png"))
                         //{
@@ -417,7 +530,7 @@ namespace HS2_StudioCharaShuffle
                         //}
 
 
-                        StudioCharaSwitchPlugin.Logger.LogInfo($"路径：{savingPath}");
+                        //StudioCharaSwitchPlugin.Logger.LogInfo($"路径：{savingPath}");
 
                     }
                 }, "Save Charactor", savingPath, "Images (*.png)|*.png|All files|*.*", ".png", OpenFileDialog.OpenSaveFileDialgueFlags.OFN_EXPLORER | OpenFileDialog.OpenSaveFileDialgueFlags.OFN_LONGNAMES);
@@ -434,15 +547,61 @@ namespace HS2_StudioCharaShuffle
             GUILayout.EndHorizontal();
 
 
+            if (!Model.Main.CharaPathIsOk)
+            {
+                GUILayout.BeginHorizontal();
+                GUI.color = Color.red;
+                GUILayout.Label(Model.Main.CharaPathMessage);
+                GUI.color = oldColor;
+                GUILayout.EndHorizontal();
+            }
 
-            //GUILayout.Label(LC("是否包含子路径："), GUILayout.Width(200));
+
+
+            GUILayout.BeginHorizontal();
+            GUILayout.Label(LC("识别人物卡数量："), GUILayout.Width(100));
+            GUILayout.Label(Model.Main.CharaCount.ToString(), GUILayout.Width(30));
+            if (GUILayout.Button(LC("刷新"), GUILayout.Width(50)))
+            {
+
+            }
+
+
+            GUILayout.EndHorizontal();
+
+
+            if (!Model.Main.CharaPathIsOk)
+            {
+                GUI.enabled = false;
+            }
+    
             bool IsChecked = GUILayout.Toggle(Model.Main.CharaIsSub, $"是否包含子目录");
             if (IsChecked != Model.Main.CharaIsSub)
             {
                 Model.Main.CharaIsSub = IsChecked;
             }
+            if (IsChecked)
+            {
+                GUILayout.BeginHorizontal();
+                GUILayout.Label(LC("子目录深度："), GUILayout.Width(80));
+                float newValue = GUILayout.HorizontalSlider(Model.Main.CharaSubDepth, 2f, 5f, GUILayout.Width(80));
+                int newValueI = (int)newValue;
+                if (newValueI != Model.Main.CharaSubDepth)
+                {
+                    Model.Main.CharaSubDepth = newValueI;
+                }
+                GUILayout.Label($"{newValueI}层");
+                GUILayout.EndHorizontal();
+            }
 
-            IsChecked = GUILayout.Toggle(Model.Main.CharaIsAuto, "是否自动更换");
+
+
+            if (Model.Main.CharaIsAuto)
+            {
+                GUI.color = Color.green;
+            }
+            IsChecked = GUILayout.Toggle(Model.Main.CharaIsAuto, "是否自动替换");
+            GUI.color = oldColor;
             if (IsChecked != Model.Main.CharaIsAuto)
             {
                 Model.Main.CharaIsAuto = IsChecked;
@@ -450,7 +609,7 @@ namespace HS2_StudioCharaShuffle
             if (IsChecked)
             {
                 GUILayout.BeginHorizontal();
-                GUILayout.Label(LC("频率："), GUILayout.Width(80));
+                GUILayout.Label(LC("替换频率："), GUILayout.Width(70));
                 float newValue = GUILayout.HorizontalSlider(Model.Main.CharaAutoTime, 10f, 600f, GUILayout.Width(80));
                 int newValueI = (int)newValue;
                 if (newValueI != Model.Main.CharaAutoTime)
@@ -463,11 +622,37 @@ namespace HS2_StudioCharaShuffle
                 GUILayout.EndHorizontal();
             }
 
+            if (Model.Main.CharaFaceIsAuto)
+            {
+                GUI.color = Color.green;
+            }
+            IsChecked = GUILayout.Toggle(Model.Main.CharaFaceIsAuto, "是否自动替换外观");
+            GUI.color = oldColor;
+            if (IsChecked != Model.Main.CharaFaceIsAuto)
+            {
+                Model.Main.CharaFaceIsAuto = IsChecked;
+            }
+            if (IsChecked)
+            {
+                GUILayout.BeginHorizontal();
+                GUILayout.Label(LC("替换频率："), GUILayout.Width(70));
+                float newValue = GUILayout.HorizontalSlider(Model.Main.CharaFaceAutoTime, 10f, 600f, GUILayout.Width(80));
+                int newValueI = (int)newValue;
+                if (newValueI != Model.Main.CharaFaceAutoTime)
+                {
+                    Model.Main.CharaFaceAutoTime = newValueI;
+                }
+                GUILayout.Label($"{newValueI}秒");
+
+
+                GUILayout.EndHorizontal();
+            }
+
+            GUI.enabled = true;
 
 
 
-
-            GUILayout.BeginHorizontal();
+           GUILayout.BeginHorizontal();
             GUILayout.Label(LC("服装卡随机目录"), GUI.skin.box);
             GUILayout.EndHorizontal();
 
@@ -485,8 +670,9 @@ namespace HS2_StudioCharaShuffle
             GUILayout.BeginHorizontal();
             newTxtV = GUILayout.TextField(Model.Main.CoordPath, GUILayout.Width(250));
 
-            if (GUILayout.Button(LC("选择目录"), GUILayout.Width(120)))
+            if (GUILayout.Button(LC("选择目录"), GUILayout.Width(100)))
             {
+
                 var savingPath = Utils.GetCharaPath(1);
                 OpenFileDialog.Show((files) =>
                 {
@@ -494,14 +680,19 @@ namespace HS2_StudioCharaShuffle
                     {
                         string pathname = files[0];
                         Model.Main.CoordPath = Path.GetDirectoryName(pathname);
-                        //savingFilename = Path.GetFileName(pathname);
-                        //if (!Path.GetExtension(pathname).ToLower().Equals(".png"))
-                        //{
-                        //    savingFilename += ".png";
-                        //}
+
+                        string rootPath = Path.GetPathRoot(Model.Main.CoordPath);
+
+                        // 检查所选目录是否为盘符根目录
+                        if (Model.Main.CoordPath == rootPath)
+                        {
+                            Model.Main.CoordPathIsOk = false;
+                            return;
+                        }
 
 
-                        StudioCharaSwitchPlugin.Logger.LogInfo($"路径：{savingPath}");
+
+                        //StudioCharaSwitchPlugin.Logger.LogInfo($"路径：{savingPath}");
 
                     }
                 }, "Save Charactor", savingPath, "Images (*.png)|*.png|All files|*.*", ".png", OpenFileDialog.OpenSaveFileDialgueFlags.OFN_EXPLORER | OpenFileDialog.OpenSaveFileDialgueFlags.OFN_LONGNAMES);
@@ -526,9 +717,13 @@ namespace HS2_StudioCharaShuffle
                 Model.Main.CoordIsSub = IsChecked;
             }
 
+            if (Model.Main.CoordIsAuto)
+            {
+                GUI.color = Color.green;
+            }
+            IsChecked = GUILayout.Toggle(Model.Main.CoordIsAuto, "是否自动更换");
+            GUI.color = oldColor;
 
-
-            IsChecked = GUILayout.Toggle(Model.Main.CoordIsAuto, Model.Main.CoordIsAuto ? greenText("是否自动更换") : "是否自动更换");
             if (IsChecked != Model.Main.CoordIsAuto)
             {
                 Model.Main.CoordIsAuto = IsChecked;
@@ -544,8 +739,6 @@ namespace HS2_StudioCharaShuffle
                     Model.Main.CoordAutoTime = newValueI;
                 }
                 GUILayout.Label($"{newValueI}秒");
-
-
                 GUILayout.EndHorizontal();
             }
 
@@ -628,14 +821,14 @@ namespace HS2_StudioCharaShuffle
         }
 
         // 替换外形
-        public static void LoadAnatomy(string filePath)
+        public static void LoadAnatomy(string filePath, OCIChar chara)
         {
-            CallWearCustom(filePath, anatomy);
+            CallWearCustom(filePath, anatomy, chara);
         }
 
-        public static void LoadOutfit(string filePath)
+        public static void LoadOutfit(string filePath, OCIChar chara)
         {
-            CallWearCustom(filePath, outfit);
+            CallWearCustom(filePath, outfit, chara);
         }
         private static readonly bool[] outfit = new bool[5] { false, false, false, true, true };
 
@@ -653,7 +846,7 @@ namespace HS2_StudioCharaShuffle
         private static Type _studioCharaListUtilType;
         public static Type StudioCharaListUtilType => _studioCharaListUtilType ?? (_studioCharaListUtilType = Type.GetType("WearCustom.StudioCharaListUtil, HS2WearCustom, Version=0.4.0.0, Culture=neutral, PublicKeyToken=null"));
         private static readonly bool[] anatomy = new bool[5] { true, true, true, false, false };
-        public static void CallWearCustom(string fileFullName, bool[] loadState)
+        public static void CallWearCustom(string fileFullName, bool[] loadState, OCIChar chara)
         {
             if (!string.IsNullOrEmpty(fileFullName))
             {
@@ -674,8 +867,13 @@ namespace HS2_StudioCharaShuffle
                 {
                     array[i].SetValue(component, loadState[i]);
                 }
+
+
                 FieldInfo field6 = StudioCharaListUtilType.GetField("charaFileSort", BindingFlags.Instance | BindingFlags.NonPublic);
-                MethodInfo method = StudioCharaListUtilType.GetMethod("ChangeChara", BindingFlags.Instance | BindingFlags.NonPublic, null, new Type[0], null);
+                //MethodInfo method = StudioCharaListUtilType.GetMethod("ChangeChara", BindingFlags.Instance | BindingFlags.NonPublic, null, new Type[0], null);
+                MethodInfo method = StudioCharaListUtilType.GetMethod("ChangeChara", BindingFlags.NonPublic | BindingFlags.Instance, null, new Type[] { typeof(OCIChar) }, null);
+
+
                 object value = field6.GetValue(component);
                 object obj = ((value is CharaFileSort) ? value : null);
                 ((CharaFileSort)obj).cfiList.Clear();
@@ -685,7 +883,14 @@ namespace HS2_StudioCharaShuffle
                 CharaFileInfo item = val2;
                 ((CharaFileSort)obj).cfiList.Add(item);
                 ((CharaFileSort)obj).select = 0;
-                method.Invoke(component, new object[0]);
+                if (chara == null)
+                {
+                    method.Invoke(component, new object[0]);
+                }
+                else
+                {
+                    method.Invoke(component, new object[] { chara });
+                }
             }
 
 
