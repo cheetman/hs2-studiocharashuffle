@@ -365,6 +365,11 @@ namespace HS2_StudioCharaShuffle
 
             if (GUILayout.Button(LC("随机人物卡")))
             {
+                // 找出随机的人物
+                var count = Utils.GetTreeCharaInfoDic().SelectMany(x => x.Value).Count();
+                var selectedCards = Utils.GetCharaCards().OrderBy(p => Guid.NewGuid()).Take(count);
+                var queueSelectedCards = new Queue<string>(selectedCards);
+
                 foreach (var item in Utils.GetTreeCharaInfoDic())
                 {
                     foreach (var chara in item.Value.Where(x => x.IsSelected))
@@ -375,8 +380,20 @@ namespace HS2_StudioCharaShuffle
                         {
                             IEnumerator MyCoroutine()
                             {
-                                obj.ChangeChara(@"E:\BaiduSyncdisk\HS2 [人物卡共用]\金橡木 [4]\HS2ChaF_20230601215530012.png");
-                                Utils.BuildTreeCharaInfoList();
+                                if(queueSelectedCards.Count > 0)
+                                {
+                                    var card = queueSelectedCards.Dequeue();
+                                    //obj.ChangeChara(card);
+                                    LoadAll(card, obj);
+                                }
+                                else
+                                {
+                                    StudioCharaSwitchPlugin.Logger.LogWarning($"人物卡不够");
+                                }
+                                if (queueSelectedCards.Count == 0)
+                                {
+                                    Utils.BuildTreeCharaInfoList();
+                                }
                                 yield return null;
                             }
 
@@ -391,6 +408,12 @@ namespace HS2_StudioCharaShuffle
 
             if (GUILayout.Button(LC("随机人物外形")))
             {
+                // 找出随机的人物
+                var count = Utils.GetTreeCharaInfoDic().SelectMany(x => x.Value).Count();
+                var selectedCards = Utils.GetCharaCards().OrderBy(p => Guid.NewGuid()).Take(count);
+                var queueSelectedCards = new Queue<string>(selectedCards);
+
+
                 foreach (var item in Utils.GetTreeCharaInfoDic())
                 {
                     foreach (var chara in item.Value.Where(x => x.IsSelected))
@@ -401,9 +424,23 @@ namespace HS2_StudioCharaShuffle
                         {
                             IEnumerator MyCoroutine()
                             {
-                                LoadAnatomy(@"E:\BaiduSyncdisk\HS2 [人物卡共用]\new [3]\AISChaF_20200101123928407.png", obj);
-                                ////obj.ChangeChara(@"E:\BaiduSyncdisk\HS2 [人物卡共用]\new [3]\AISChaF_20200101123928407.png");
-                                Utils.BuildTreeCharaInfoList();
+
+                                if (queueSelectedCards.Count > 0)
+                                {
+                                    var card = queueSelectedCards.Dequeue();
+                                    LoadAnatomy(card, obj);
+                                }
+                                else
+                                {
+                                    StudioCharaSwitchPlugin.Logger.LogWarning($"人物卡不够");
+                                }
+                                if (queueSelectedCards.Count == 0)
+                                {
+                                    Utils.BuildTreeCharaInfoList();
+                                }
+
+                                //LoadAnatomy(@"E:\BaiduSyncdisk\HS2 [人物卡共用]\new [3]\AISChaF_20200101123928407.png", obj);
+                                //Utils.BuildTreeCharaInfoList();
                                 yield return null;
                             }
 
@@ -826,6 +863,11 @@ namespace HS2_StudioCharaShuffle
             CallWearCustom(filePath, anatomy, chara);
         }
 
+        public static void LoadAll(string filePath, OCIChar chara)
+        {
+            CallWearCustom(filePath, anatomy2, chara);
+        }
+
         public static void LoadOutfit(string filePath, OCIChar chara)
         {
             CallWearCustom(filePath, outfit, chara);
@@ -846,6 +888,7 @@ namespace HS2_StudioCharaShuffle
         private static Type _studioCharaListUtilType;
         public static Type StudioCharaListUtilType => _studioCharaListUtilType ?? (_studioCharaListUtilType = Type.GetType("WearCustom.StudioCharaListUtil, HS2WearCustom, Version=0.4.0.0, Culture=neutral, PublicKeyToken=null"));
         private static readonly bool[] anatomy = new bool[5] { true, true, true, false, false };
+        private static readonly bool[] anatomy2 = new bool[5] { true, true, true, true, true };
         public static void CallWearCustom(string fileFullName, bool[] loadState, OCIChar chara)
         {
             if (!string.IsNullOrEmpty(fileFullName))
