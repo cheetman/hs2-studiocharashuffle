@@ -29,7 +29,7 @@ namespace HS2_StudioCharaShuffle
             public bool CharaPathIsOk { get; set; } = true;
             public string CharaPathMessage { get; set; }
             public bool CharaIsSub { get; set; }
-            public int CharaSubDepth { get; set; } = 3;
+            public int CharaSubDepth { get; set; } = 2;
             public bool CharaIsAuto { get; set; }
             public bool CharaFaceIsAuto { get; set; }
             public int CharaAutoTime { get; set; } = 20;

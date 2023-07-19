@@ -11,19 +11,19 @@ using UnityEngine;
 
 namespace HS2_StudioCharaShuffle
 {
-   public  class StudioCharaSwitchMgr : MonoBehaviour
+   public  class StudioCharaShuffleMgr : MonoBehaviour
     {
 
         public UI gui;
-        public static StudioCharaSwitchMgr Instance { get; private set; }
+        public static StudioCharaShuffleMgr Instance { get; private set; }
 
         public Dictionary<OCIChar, CharaController> charaEditorCtrlDict = new Dictionary<OCIChar, CharaController>();
 
-        public static StudioCharaSwitchMgr Install(GameObject container)
+        public static StudioCharaShuffleMgr Install(GameObject container)
         {
             if (Instance == null)
             {
-                Instance = container.AddComponent<StudioCharaSwitchMgr>();
+                Instance = container.AddComponent<StudioCharaShuffleMgr>();
             }
             return Instance;
         }
@@ -49,7 +49,7 @@ namespace HS2_StudioCharaShuffle
             gui.transform.parent = base.transform;
             gui.IsVisible = false;
             //Console.WriteLine("StudioCharaEditor CharaEditorMgr Started.");
-            StudioCharaSwitchPlugin.Logger.LogInfo("StudioCharaSwitchMgr Started.");
+            StudioCharaShufflePlugin.Logger.LogInfo("StudioCharaSwitchMgr Started.");
             // check extra plugins
         }
 

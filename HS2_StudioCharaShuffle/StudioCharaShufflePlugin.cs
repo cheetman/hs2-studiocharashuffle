@@ -14,7 +14,7 @@ namespace HS2_StudioCharaShuffle
 
 
     [BepInPlugin(GUID, Name, Version)]
-    public class StudioCharaSwitchPlugin : BaseUnityPlugin
+    public class StudioCharaShufflePlugin : BaseUnityPlugin
     {
 
         //static void Main(string[] args)
@@ -28,7 +28,7 @@ namespace HS2_StudioCharaShuffle
         public const string Name = "Studio Chara Shuffle";
         public const string Version = "0.1.0";
 
-        public static StudioCharaSwitchPlugin Instance { get; private set; }
+        public static StudioCharaShufflePlugin Instance { get; private set; }
 
         internal static new ManualLogSource Logger;
 
@@ -43,7 +43,7 @@ namespace HS2_StudioCharaShuffle
         public static ConfigEntry<KeyboardShortcut> UIHotKey3 { get; private set; }
 
 
-        public StudioCharaSwitchPlugin()
+        public StudioCharaShufflePlugin()
         {
             Instance = this;
             Logger = base.Logger;
@@ -52,9 +52,12 @@ namespace HS2_StudioCharaShuffle
             UIPath = Config.Bind<string>("路径", "人物路径", "默认值", "人物路径");
 
             UIHotKeyShow = Config.Bind("General", "快捷键", new KeyboardShortcut(KeyCode.S, KeyCode.LeftShift), "Toggles the main UI on and off.");
-            UIHotKey1 = Config.Bind("General", "随机人物快捷键", new KeyboardShortcut(KeyCode.Keypad7, KeyCode.LeftShift), "Toggles the main UI on and off.");
-            UIHotKey2 = Config.Bind("General", "随机外观快捷键", new KeyboardShortcut(KeyCode.Keypad8, KeyCode.LeftShift), "Toggles the main UI on and off.");
-            UIHotKey3 = Config.Bind("General", "随机服装快捷键", new KeyboardShortcut(KeyCode.Keypad9, KeyCode.LeftShift), "Toggles the main UI on and off.");
+            //UIHotKey1 = Config.Bind("General", "随机人物快捷键", new KeyboardShortcut(KeyCode.KeypadDivide, KeyCode.LeftShift), "Toggles the main UI on and off.");
+            //UIHotKey2 = Config.Bind("General", "随机外观快捷键", new KeyboardShortcut(KeyCode.KeypadMultiply, KeyCode.LeftShift), "Toggles the main UI on and off.");
+            //UIHotKey3 = Config.Bind("General", "随机服装快捷键", new KeyboardShortcut(KeyCode.KeypadMinus, KeyCode.LeftShift), "Toggles the main UI on and off.");
+            UIHotKey1 = Config.Bind("General", "随机人物快捷键", new KeyboardShortcut(KeyCode.KeypadDivide), "Toggles the main UI on and off.");
+            UIHotKey2 = Config.Bind("General", "随机外观快捷键", new KeyboardShortcut(KeyCode.KeypadMultiply), "Toggles the main UI on and off.");
+            UIHotKey3 = Config.Bind("General", "随机服装快捷键", new KeyboardShortcut(KeyCode.KeypadMinus), "Toggles the main UI on and off.");
 
 
 
@@ -66,7 +69,7 @@ namespace HS2_StudioCharaShuffle
 
             var gameObject = new GameObject(Name);
             DontDestroyOnLoad(gameObject);
-            StudioCharaSwitchMgr.Install(gameObject);
+            StudioCharaShuffleMgr.Install(gameObject);
 
 
 

@@ -44,14 +44,14 @@ namespace HS2_StudioCharaShuffle
             return CoordCardPaths;
         }
 
-        public static int BuildCharaCardPaths(string path, int maxDepth = 1)
+        public static int BuildCharaCardPaths(string path, int maxDepth = 0)
         {
             CharaCardPaths.Clear();
             TraverseCharaDirectory(path, 0, maxDepth);
             return CharaCardPaths.Count;
         }
 
-        public static int BuildCoordCardPaths(string path, int maxDepth = 1)
+        public static int BuildCoordCardPaths(string path, int maxDepth = 0)
         {
             CoordCardPaths.Clear();
             TraverseCoordDirectory(path, 0, maxDepth);
@@ -75,7 +75,7 @@ namespace HS2_StudioCharaShuffle
                     if (isPng)
                     {
                         CharaCardPaths.Add(file);
-                        StudioCharaSwitchPlugin.Logger.LogInfo("人物卡: " + file);
+                        StudioCharaShufflePlugin.Logger.LogInfo("人物卡: " + file);
                     }
                 }
 
@@ -93,7 +93,7 @@ namespace HS2_StudioCharaShuffle
             }
             catch (Exception e)
             {
-                StudioCharaSwitchPlugin.Logger.LogWarning("发生错误: " + e.Message);
+                StudioCharaShufflePlugin.Logger.LogWarning("发生错误: " + e.Message);
             }
         }
 
@@ -113,7 +113,7 @@ namespace HS2_StudioCharaShuffle
                     if (isPng)
                     {
                         CoordCardPaths.Add(file);
-                        StudioCharaSwitchPlugin.Logger.LogInfo("服装卡: " + file);
+                        StudioCharaShufflePlugin.Logger.LogInfo("服装卡: " + file);
                     }
                 }
 
@@ -131,7 +131,7 @@ namespace HS2_StudioCharaShuffle
             }
             catch (Exception e)
             {
-                StudioCharaSwitchPlugin.Logger.LogWarning("发生错误: " + e.Message);
+                StudioCharaShufflePlugin.Logger.LogWarning("发生错误: " + e.Message);
             }
         }
 

@@ -243,7 +243,7 @@ namespace HS2_StudioCharaShuffle
             }
             catch (Exception ex)
             {
-                StudioCharaSwitchPlugin.Logger.LogError(ex.ToString());
+                StudioCharaShufflePlugin.Logger.LogError(ex.ToString());
             }
 
 
