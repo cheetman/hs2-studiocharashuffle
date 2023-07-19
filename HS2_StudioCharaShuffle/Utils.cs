@@ -39,15 +39,26 @@ namespace HS2_StudioCharaShuffle
         {
             return CharaCardPaths;
         }
+        public static List<string> GetCoordCards()
+        {
+            return CoordCardPaths;
+        }
 
-        public static int BuildCharaCardPaths(string path,int maxDepth = 1)
+        public static int BuildCharaCardPaths(string path, int maxDepth = 1)
         {
             CharaCardPaths.Clear();
             TraverseCharaDirectory(path, 0, maxDepth);
             return CharaCardPaths.Count;
         }
 
-        static void TraverseCharaDirectory(string directory, int depth,int maxDepth)
+        public static int BuildCoordCardPaths(string path, int maxDepth = 1)
+        {
+            CoordCardPaths.Clear();
+            TraverseCoordDirectory(path, 0, maxDepth);
+            return CoordCardPaths.Count;
+        }
+
+        static void TraverseCharaDirectory(string directory, int depth, int maxDepth)
         {
             try
             {
@@ -60,7 +71,7 @@ namespace HS2_StudioCharaShuffle
                 // 处理当前目录下的 .png 文件
                 foreach (string file in pngFiles)
                 {
-                   var isPng = GetPng(file);
+                    var isPng = GetPng(file);
                     if (isPng)
                     {
                         CharaCardPaths.Add(file);
@@ -87,11 +98,49 @@ namespace HS2_StudioCharaShuffle
         }
 
 
+        static void TraverseCoordDirectory(string directory, int depth, int maxDepth)
+        {
+            try
+            {
+
+                // 获取当前目录下的所有 .png 文件
+                string[] pngFiles = Directory.GetFiles(directory, "*.png");
+
+                // 处理当前目录下的 .png 文件
+                foreach (string file in pngFiles)
+                {
+                    var isPng = GetPngCoord(file);
+                    if (isPng)
+                    {
+                        CoordCardPaths.Add(file);
+                        StudioCharaSwitchPlugin.Logger.LogInfo("服装卡: " + file);
+                    }
+                }
+
+                // 获取当前目录下的所有子目录
+                string[] subDirectories = Directory.GetDirectories(directory);
+
+                // 递归遍历子目录，但限制深度
+                if (depth < maxDepth)
+                {
+                    foreach (string subDirectory in subDirectories)
+                    {
+                        TraverseCoordDirectory(subDirectory, depth + 1, maxDepth);
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                StudioCharaSwitchPlugin.Logger.LogWarning("发生错误: " + e.Message);
+            }
+        }
 
 
 
 
-        public static Dictionary<string, List<TreeCharaInfo>>  GetTreeCharaInfoDic()
+
+
+        public static Dictionary<string, List<TreeCharaInfo>> GetTreeCharaInfoDic()
         {
             return TreeCharaInfosDic;
         }
@@ -168,10 +217,71 @@ namespace HS2_StudioCharaShuffle
             return defPath;
         }
 
-
-        static public bool GetPng(string filepath)
+        //static public Version loadVersion = new Version(ChaFileDefine.ChaFileCoordinateVersion.ToString());
+        static public bool GetPngCoord(string filepath, bool noLoadPNG = true)
         {
-            var noLoadPNG = false;
+            byte[] pngData;
+
+            using (var st = new FileStream(filepath, FileMode.Open, FileAccess.Read))
+            {
+                using (var br = new BinaryReader(st))
+                {
+                    int num = (int)GetPngSize(br);
+                    if (num != 0)
+                    {
+                        //item.GetPngData(br, num);
+
+                        if (noLoadPNG)
+                        {
+                            br.BaseStream.Seek(num, SeekOrigin.Current);
+                        }
+                        else
+                        {
+                            pngData = br.ReadBytes((int)num);
+                        }
+                        if (br.BaseStream.Length - br.BaseStream.Position == 0L)
+                        {
+                            //lastLoadErrorCode = -5;
+                            return false;
+                        }
+                    }
+                    try
+                    {
+                        if (br.ReadInt32() > 100)
+                        {
+                            return false;
+                        }
+                        if (br.ReadString() != "【AIS_Clothes】")
+                        {
+                            return false;
+                        }
+                        if (new Version(br.ReadString()) > ChaFileDefine.ChaFileClothesVersion)
+                        {
+                            return false;
+                        }
+                        var language = br.ReadInt32();
+                        var coordinateName = br.ReadString();
+                        int count = br.ReadInt32();
+                        byte[] data = br.ReadBytes(count);
+                        if (LoadBytes(data))
+                        {
+                            return true;
+                        }
+                        return false;
+
+                    }
+                    catch
+                    {
+                        return false;
+                    }
+                }
+            }
+        }
+
+
+
+        static public bool GetPng(string filepath, bool noLoadPNG = true)
+        {
             byte[] pngData;
 
             using (var st = new FileStream(filepath, FileMode.Open, FileAccess.Read))
@@ -211,9 +321,9 @@ namespace HS2_StudioCharaShuffle
                         {
                             return false;
                         }
-                        br.ReadInt32();
-                        br.ReadString();
-                        br.ReadString();
+                        var language = br.ReadInt32();
+                        var userID = br.ReadString();
+                        var dataID = br.ReadString();
                         int count = br.ReadInt32();
                         BlockHeader blockHeader = MessagePackSerializer.Deserialize<BlockHeader>(br.ReadBytes(count));
                         br.ReadInt64();
@@ -242,6 +352,36 @@ namespace HS2_StudioCharaShuffle
         public static int Big2LittleInt32(int big)
         {
             return ((big >> 24) & 0xFF) | ((big >> 8) & 0xFF00) | ((big << 8) & 0xFF0000) | (big << 24);
+        }
+
+
+        static public bool LoadBytes(byte[] data, Version ver = null)
+        {
+            ChaFileClothes clothes;
+            ChaFileAccessory accessory;
+            using (MemoryStream input = new MemoryStream(data))
+            {
+                using (BinaryReader binaryReader = new BinaryReader(input))
+                {
+                    try
+                    {
+                        int count = binaryReader.ReadInt32();
+                        byte[] bytes = binaryReader.ReadBytes(count);
+                        clothes = MessagePackSerializer.Deserialize<ChaFileClothes>(bytes);
+                        count = binaryReader.ReadInt32();
+                        bytes = binaryReader.ReadBytes(count);
+                        accessory = MessagePackSerializer.Deserialize<ChaFileAccessory>(bytes);
+                    }
+                    catch (EndOfStreamException)
+                    {
+                        return false;
+                    }
+                    clothes.ComplementWithVersion();
+                    accessory.ComplementWithVersion();
+                    return true;
+                }
+
+            }
         }
 
 

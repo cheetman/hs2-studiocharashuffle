@@ -38,6 +38,9 @@ namespace HS2_StudioCharaShuffle
 
         public static ConfigEntry<string> UIPath { get; private set; }
         public static ConfigEntry<KeyboardShortcut> UIHotKeyShow { get; private set; }
+        public static ConfigEntry<KeyboardShortcut> UIHotKey1 { get; private set; }
+        public static ConfigEntry<KeyboardShortcut> UIHotKey2 { get; private set; }
+        public static ConfigEntry<KeyboardShortcut> UIHotKey3 { get; private set; }
 
 
         public StudioCharaSwitchPlugin()
@@ -48,7 +51,10 @@ namespace HS2_StudioCharaShuffle
 
             UIPath = Config.Bind<string>("路径", "人物路径", "默认值", "人物路径");
 
-            UIHotKeyShow = Config.Bind("General", "快捷键", new KeyboardShortcut(KeyCode.R, KeyCode.LeftShift), "Toggles the main UI on and off.");
+            UIHotKeyShow = Config.Bind("General", "快捷键", new KeyboardShortcut(KeyCode.S, KeyCode.LeftShift), "Toggles the main UI on and off.");
+            UIHotKey1 = Config.Bind("General", "随机人物快捷键", new KeyboardShortcut(KeyCode.Keypad7, KeyCode.LeftShift), "Toggles the main UI on and off.");
+            UIHotKey2 = Config.Bind("General", "随机外观快捷键", new KeyboardShortcut(KeyCode.Keypad8, KeyCode.LeftShift), "Toggles the main UI on and off.");
+            UIHotKey3 = Config.Bind("General", "随机服装快捷键", new KeyboardShortcut(KeyCode.Keypad9, KeyCode.LeftShift), "Toggles the main UI on and off.");
 
 
 

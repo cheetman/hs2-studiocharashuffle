@@ -46,6 +46,9 @@ namespace HS2_StudioCharaShuffle
             public int CoordSubDepth { get; set; }
             public bool CoordIsAuto { get; set; }
             public int CoordAutoTime { get; set; } = 20;
+            public bool CoordIsOne { get; set; }
+            public bool CoordIsRepeat { get; set; }
+
 
         }
 
