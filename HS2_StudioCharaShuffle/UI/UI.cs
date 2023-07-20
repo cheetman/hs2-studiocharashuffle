@@ -9,6 +9,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
 using WearCustom;
@@ -44,8 +45,10 @@ namespace HS2_StudioCharaShuffle
         private int selectedTreeIndex = 0;
         private HashSet<int> mySelectedTreeIndexs = new HashSet<int>();
 
+
         private void Start()
         {
+
             largeLabel = new GUIStyle("label");
             largeLabel.fontSize = 16;
             btnstyle = new GUIStyle("button");
@@ -54,8 +57,10 @@ namespace HS2_StudioCharaShuffle
 
             Model = UIModel.GetInstance();
 
-            Model.Main.CharaPath = @"D:\Cache\QQ\文件接收\";
+            Model.Main.CharaPath = Utils.GetCharaPath(1).FullName;
             Model.Main.CharaPathIsOk = true;
+            Model.Main.CoordPath = Utils.GetCoordPath(1).FullName;
+            Model.Main.CoordPathIsOk = true;
 
             Studio.Studio.Instance.treeNodeCtrl.onSelect += (TreeNodeObject treeNodeObject) =>
             {
@@ -166,6 +171,7 @@ namespace HS2_StudioCharaShuffle
             else if (StudioCharaShufflePlugin.UIHotKey1.Value.IsDown())
             {
 
+                UI.ToDoQueue.Enqueue(() => RandomChara());
 
 
             }
@@ -174,6 +180,7 @@ namespace HS2_StudioCharaShuffle
             {
 
 
+                UI.ToDoQueue.Enqueue(() => RandomCharaWithoutCloth());
 
             }
             // 随机服装卡
@@ -181,6 +188,7 @@ namespace HS2_StudioCharaShuffle
             {
 
 
+                UI.ToDoQueue.Enqueue(() => RandomCloth());
 
             }
 
@@ -189,14 +197,15 @@ namespace HS2_StudioCharaShuffle
             // house keeping
             //StudioCharaSwitchMgr.Instance.HouseKeeping(IsVisible);
 
-            // check todo queue
-            //if (ToDoQueue.Count > 0)
-            //{
-            //    Action p = ToDoQueue.Dequeue();
-            //    p();
-            //}
+            //check todo queue
+            if (ToDoQueue.Count > 0)
+            {
+                Action p = ToDoQueue.Dequeue();
+                p();
+            }
         }
 
+        public static Queue<Action> ToDoQueue = new Queue<Action>();
 
 
         private Vector2 leftScroll = Vector2.zero;
@@ -356,23 +365,17 @@ namespace HS2_StudioCharaShuffle
 
             if (GUILayout.Button(LC("随机人物卡")))
             {
-                RandomChara();
+                UI.ToDoQueue.Enqueue(() => RandomChara());
             }
 
             if (GUILayout.Button(LC("随机人物外形")))
             {
-                RandomCharaWithoutCloth();
+                UI.ToDoQueue.Enqueue(() => RandomCharaWithoutCloth());
             }
 
             if (GUILayout.Button(LC("随机服装卡")))
             {
-                RandomCloth();
-
-
-
-
-
-
+                UI.ToDoQueue.Enqueue(() => RandomCloth());
 
             }
             //if (GUILayout.Button(LC("设置")))
@@ -405,6 +408,12 @@ namespace HS2_StudioCharaShuffle
 
             GUILayout.BeginHorizontal();
 
+
+            if (Model.Main.CharaPathIsLoading)
+            {
+                GUI.enabled = false;
+            }
+
             string newTxtV = string.Empty;
             if (!Model.Main.CharaPathIsOk)
             {
@@ -421,16 +430,15 @@ namespace HS2_StudioCharaShuffle
 
             if (GUILayout.Button(LC("选择目录"), GUILayout.Width(100)))
             {
-                var savingPath = Utils.GetCharaPath(1);
                 OpenFileDialog.Show((files) =>
                 {
                     if (files != null && files.Length > 0)
                     {
                         string pathname = files[0];
                         Model.Main.CharaPath = Path.GetDirectoryName(pathname);
-                        RefreshCharaCards();
+                        UI.ToDoQueue.Enqueue(() => RefreshCharaCards());
                     }
-                }, "Save Charactor", savingPath, "Images (*.png)|*.png|All files|*.*", ".png", OpenFileDialog.OpenSaveFileDialgueFlags.OFN_EXPLORER | OpenFileDialog.OpenSaveFileDialgueFlags.OFN_LONGNAMES);
+                }, "Save Charactor", Model.Main.CharaPath, "Images (*.png)|*.png|All files|*.*", ".png", OpenFileDialog.OpenSaveFileDialgueFlags.OFN_EXPLORER | OpenFileDialog.OpenSaveFileDialgueFlags.OFN_LONGNAMES);
 
             }
 
@@ -454,23 +462,19 @@ namespace HS2_StudioCharaShuffle
             }
 
 
-
             GUILayout.BeginHorizontal();
             GUILayout.Label(LC("识别人物卡数量："), GUILayout.Width(110));
             GUILayout.Label(Model.Main.CharaCount.ToString(), GUILayout.Width(30));
             if (GUILayout.Button(LC("刷新"), GUILayout.Width(50)))
             {
-                RefreshCharaCards();
+                UI.ToDoQueue.Enqueue(() => RefreshCharaCards());
             }
 
 
             GUILayout.EndHorizontal();
 
 
-            if (!Model.Main.CharaPathIsOk)
-            {
-                GUI.enabled = false;
-            }
+
 
             bool IsChecked = GUILayout.Toggle(Model.Main.CharaIsSub, $"是否包含子目录");
             if (IsChecked != Model.Main.CharaIsSub)
@@ -491,7 +495,16 @@ namespace HS2_StudioCharaShuffle
                 GUILayout.EndHorizontal();
             }
 
+            if (!Model.Main.CharaPathIsOk)
+            {
+                GUI.enabled = false;
+            }
 
+            var oldEnabled = GUI.enabled;
+            if (Model.Main.CharaIsAutoRunning)
+            {
+                GUI.enabled = false;
+            }
 
             if (Model.Main.CharaIsAuto)
             {
@@ -507,18 +520,43 @@ namespace HS2_StudioCharaShuffle
             {
                 GUILayout.BeginHorizontal();
                 GUILayout.Label(LC("替换频率："), GUILayout.Width(70));
-                float newValue = GUILayout.HorizontalSlider(Model.Main.CharaAutoTime, 10f, 600f, GUILayout.Width(80));
+                float newValue = GUILayout.HorizontalSlider(Model.Main.CharaAutoTime, 10f, 300f, GUILayout.Width(80));
                 int newValueI = (int)newValue;
                 if (newValueI != Model.Main.CharaAutoTime)
                 {
                     Model.Main.CharaAutoTime = newValueI;
                 }
-                GUILayout.Label($"{newValueI}秒");
+                GUILayout.Label($"{newValueI}秒", GUILayout.Width(50));
+
+
+                if (Model.Main.CharaIsAutoRunning)
+                {
+                    GUI.enabled = oldEnabled;
+                }
+
+                if (GUILayout.Button(Model.Main.CharaIsAutoRunning ? LC("停止") : LC("启动"), GUILayout.Width(50)))
+                {
+                    if (Model.Main.CharaIsAutoRunning)
+                    {
+                        CancelInvoke("RandomChara");
+                        Model.Main.CharaIsAutoRunning = false;
+                    }
+                    else
+                    {
+                        InvokeRepeating("RandomChara", Model.Main.CharaAutoTime, Model.Main.CharaAutoTime);
+                        Model.Main.CharaIsAutoRunning = true;
+                    }
+                }
 
 
                 GUILayout.EndHorizontal();
             }
 
+            oldEnabled = GUI.enabled;
+            if (Model.Main.CharaFaceIsAutoRunning)
+            {
+                GUI.enabled = false;
+            }
             if (Model.Main.CharaFaceIsAuto)
             {
                 GUI.color = Color.green;
@@ -533,13 +571,32 @@ namespace HS2_StudioCharaShuffle
             {
                 GUILayout.BeginHorizontal();
                 GUILayout.Label(LC("替换频率："), GUILayout.Width(70));
-                float newValue = GUILayout.HorizontalSlider(Model.Main.CharaFaceAutoTime, 10f, 600f, GUILayout.Width(80));
+                float newValue = GUILayout.HorizontalSlider(Model.Main.CharaFaceAutoTime, 10f, 300f, GUILayout.Width(80));
                 int newValueI = (int)newValue;
                 if (newValueI != Model.Main.CharaFaceAutoTime)
                 {
                     Model.Main.CharaFaceAutoTime = newValueI;
                 }
-                GUILayout.Label($"{newValueI}秒");
+                GUILayout.Label($"{newValueI}秒", GUILayout.Width(50));
+
+                if (Model.Main.CharaFaceIsAutoRunning)
+                {
+                    GUI.enabled = oldEnabled;
+                }
+
+                if (GUILayout.Button(Model.Main.CharaFaceIsAutoRunning ? LC("停止") : LC("启动"), GUILayout.Width(50)))
+                {
+                    if (Model.Main.CharaFaceIsAutoRunning)
+                    {
+                        CancelInvoke("RandomCharaWithoutCloth");
+                        Model.Main.CharaFaceIsAutoRunning = false;
+                    }
+                    else
+                    {
+                        InvokeRepeating("RandomCharaWithoutCloth", Model.Main.CharaFaceAutoTime, Model.Main.CharaFaceAutoTime);
+                        Model.Main.CharaFaceIsAutoRunning = true;
+                    }
+                }
 
 
                 GUILayout.EndHorizontal();
@@ -565,12 +622,18 @@ namespace HS2_StudioCharaShuffle
 
 
             GUILayout.BeginHorizontal();
+
+
+            if (Model.Main.CoordPathIsLoading)
+            {
+                GUI.enabled = false;
+            }
+
             newTxtV = GUILayout.TextField(Model.Main.CoordPath, GUILayout.Width(250));
 
             if (GUILayout.Button(LC("选择目录"), GUILayout.Width(100)))
             {
 
-                var savingPath = Utils.GetCharaPath(1);
                 OpenFileDialog.Show((files) =>
                 {
                     if (files != null && files.Length > 0)
@@ -578,11 +641,11 @@ namespace HS2_StudioCharaShuffle
                         string pathname = files[0];
                         Model.Main.CoordPath = Path.GetDirectoryName(pathname);
 
-                        RefreshCoordCards();
+                        UI.ToDoQueue.Enqueue(() => RefreshCoordCards());
 
 
                     }
-                }, "Save Charactor", savingPath, "Images (*.png)|*.png|All files|*.*", ".png", OpenFileDialog.OpenSaveFileDialgueFlags.OFN_EXPLORER | OpenFileDialog.OpenSaveFileDialgueFlags.OFN_LONGNAMES);
+                }, "Save Charactor", Model.Main.CoordPath, "Images (*.png)|*.png|All files|*.*", ".png", OpenFileDialog.OpenSaveFileDialgueFlags.OFN_EXPLORER | OpenFileDialog.OpenSaveFileDialgueFlags.OFN_LONGNAMES);
 
             }
 
@@ -614,7 +677,7 @@ namespace HS2_StudioCharaShuffle
             GUILayout.Label(Model.Main.CoordCount.ToString(), GUILayout.Width(30));
             if (GUILayout.Button(LC("刷新"), GUILayout.Width(50)))
             {
-                RefreshCoordCards();
+                UI.ToDoQueue.Enqueue(() => RefreshCoordCards());
             }
 
 
@@ -642,10 +705,31 @@ namespace HS2_StudioCharaShuffle
                 GUILayout.EndHorizontal();
             }
 
+            if (!Model.Main.CoordPathIsOk)
+            {
+                GUI.enabled = false;
+            }
+
+            IsChecked = GUILayout.Toggle(Model.Main.CoordIsOne, $"每次随机一件服装");
+            if (IsChecked != Model.Main.CoordIsOne)
+            {
+                Model.Main.CoordIsOne = IsChecked;
+            }
+
+            IsChecked = GUILayout.Toggle(Model.Main.CoordIsRepeat, $"是否允许相同服装");
+            if (IsChecked != Model.Main.CoordIsRepeat)
+            {
+                Model.Main.CoordIsRepeat = IsChecked;
+            }
 
             if (Model.Main.CoordIsAuto)
             {
                 GUI.color = Color.green;
+            }
+            oldEnabled = GUI.enabled;
+            if (Model.Main.CoordIsAutoRunning)
+            {
+                GUI.enabled = false;
             }
             IsChecked = GUILayout.Toggle(Model.Main.CoordIsAuto, "是否自动更换");
             GUI.color = oldColor;
@@ -657,30 +741,40 @@ namespace HS2_StudioCharaShuffle
             if (IsChecked)
             {
                 GUILayout.BeginHorizontal();
-                GUILayout.Label(LC("频率："), GUILayout.Width(80));
-                float newValue = GUILayout.HorizontalSlider(Model.Main.CoordAutoTime, 10f, 600f, GUILayout.Width(80));
+                GUILayout.Label(LC("替换频率："), GUILayout.Width(80));
+                float newValue = GUILayout.HorizontalSlider(Model.Main.CoordAutoTime, 10f, 300f, GUILayout.Width(80));
                 int newValueI = (int)newValue;
                 if (newValueI != Model.Main.CoordAutoTime)
                 {
                     Model.Main.CoordAutoTime = newValueI;
                 }
-                GUILayout.Label($"{newValueI}秒");
+                GUILayout.Label($"{newValueI}秒", GUILayout.Width(50));
+
+                if (Model.Main.CoordIsAutoRunning)
+                {
+                    GUI.enabled = oldEnabled;
+                }
+
+                if (GUILayout.Button(Model.Main.CoordIsAutoRunning ? LC("停止") : LC("启动"), GUILayout.Width(50)))
+                {
+                    if (Model.Main.CoordIsAutoRunning)
+                    {
+                        CancelInvoke("RandomCloth");
+                        Model.Main.CoordIsAutoRunning = false;
+                    }
+                    else
+                    {
+                        InvokeRepeating("RandomCloth", Model.Main.CoordAutoTime, Model.Main.CoordAutoTime);
+                        Model.Main.CoordIsAutoRunning = true;
+                    }
+                }
                 GUILayout.EndHorizontal();
             }
 
-            IsChecked = GUILayout.Toggle(Model.Main.CoordIsOne, $"一次随机一件服装");
-            if (IsChecked != Model.Main.CoordIsOne)
-            {
-                Model.Main.CoordIsOne = IsChecked;
-            }
-
-            IsChecked = GUILayout.Toggle(Model.Main.CoordIsRepeat, $"是否允许重复");
-            if (IsChecked != Model.Main.CoordIsRepeat)
-            {
-                Model.Main.CoordIsRepeat = IsChecked;
-            }
+   
 
 
+            GUI.enabled = true;
 
 
 
@@ -705,36 +799,41 @@ namespace HS2_StudioCharaShuffle
 
         private void RandomChara()
         {
-            // 找出随机的人物
-            var charas = Utils.GetTreeCharaInfoDic().SelectMany(x => x.Value).Where(x => x.IsSelected).ToList();
-            var count = charas.Count();
-            if (count == 0)
-            {
-                return;
-            }
-            if (Utils.GetCharaCards().Count == 0)
-            {
-                return;
-            }
 
-            var selectedCards = Utils.GetCharaCards().OrderBy(p => Guid.NewGuid()).Take(count);
-            var queueSelectedCards = new Queue<string>(selectedCards);
-
-            foreach (var item in Utils.GetTreeCharaInfoDic())
+            IEnumerator MyCoroutine()
             {
-                foreach (var chara in item.Value.Where(x => x.IsSelected))
+
+                // 找出随机的人物
+                var charas = Utils.GetTreeCharaInfoDic().SelectMany(x => x.Value).Where(x => x.IsSelected).ToList();
+                var count = charas.Count();
+                if (count == 0)
                 {
+                    yield break;
+                }
+                if (Utils.GetCharaCards().Count == 0)
+                {
+                    yield break;
+                }
 
-                    var obj = Studio.Studio.GetCtrlInfo(chara.Index) as OCIChar;
-                    if (obj != null)
+
+                var selectedCards = Utils.GetCharaCards().OrderBy(p => Guid.NewGuid()).Take(count);
+                var queueSelectedCards = new Queue<string>(selectedCards);
+
+                foreach (var item in Utils.GetTreeCharaInfoDic())
+                {
+                    foreach (var chara in item.Value.Where(x => x.IsSelected))
                     {
-                        IEnumerator MyCoroutine()
+
+                        var obj = Studio.Studio.GetCtrlInfo(chara.Index) as OCIChar;
+                        if (obj != null)
                         {
+
                             if (queueSelectedCards.Count > 0)
                             {
                                 var card = queueSelectedCards.Dequeue();
                                 //obj.ChangeChara(card);
                                 LoadAll(card, obj);
+                                yield return null;
                             }
                             else
                             {
@@ -746,43 +845,48 @@ namespace HS2_StudioCharaShuffle
                                 StudioCharaShufflePlugin.Logger.LogWarning($"刷新2");
                                 Utils.BuildTreeCharaInfoList();
                             }
-                            yield return null;
+
                         }
-                        StartCoroutine(MyCoroutine());
                     }
+
                 }
 
+                yield return null;
+
             }
+            StartCoroutine(MyCoroutine());
+
         }
         private void RandomCharaWithoutCloth()
         {
-            // 找出随机的人物
-            var charas = Utils.GetTreeCharaInfoDic().SelectMany(x => x.Value).Where(x => x.IsSelected).ToList();
-            var count = charas.Count();
-            if (count == 0)
+            IEnumerator MyCoroutine()
             {
-                return;
-            }
-            if (Utils.GetCharaCards().Count == 0)
-            {
-                return;
-            }
-            var selectedCards = Utils.GetCharaCards().OrderBy(p => Guid.NewGuid()).Take(count);
-            var queueSelectedCards = new Queue<string>(selectedCards);
-
-            foreach (var chara in charas)
-            {
-
-                var obj = Studio.Studio.GetCtrlInfo(chara.Index) as OCIChar;
-                if (obj != null)
+                // 找出随机的人物
+                var charas = Utils.GetTreeCharaInfoDic().SelectMany(x => x.Value).Where(x => x.IsSelected).ToList();
+                var count = charas.Count();
+                if (count == 0)
                 {
-                    IEnumerator MyCoroutine()
+                    yield break;
+                }
+                if (Utils.GetCharaCards().Count == 0)
+                {
+                    yield break;
+                }
+                var selectedCards = Utils.GetCharaCards().OrderBy(p => Guid.NewGuid()).Take(count);
+                var queueSelectedCards = new Queue<string>(selectedCards);
+
+                foreach (var chara in charas)
+                {
+
+                    var obj = Studio.Studio.GetCtrlInfo(chara.Index) as OCIChar;
+                    if (obj != null)
                     {
 
                         if (queueSelectedCards.Count > 0)
                         {
                             var card = queueSelectedCards.Dequeue();
                             LoadAnatomy(card, obj);
+                            yield return null;
                         }
                         else
                         {
@@ -793,153 +897,219 @@ namespace HS2_StudioCharaShuffle
                             Utils.BuildTreeCharaInfoList();
                         }
 
-                        yield return null;
                     }
-
-                    StartCoroutine(MyCoroutine());
 
                 }
 
+                yield return null;
+
             }
+            StartCoroutine(MyCoroutine());
+
+
         }
         private void RandomCloth()
         {
-            // 找出随机的人物
-            var charas = Utils.GetTreeCharaInfoDic().SelectMany(x => x.Value).Where(x => x.IsSelected).ToList();
-            var count = charas.Count();
-            if (count == 0)
-            {
-                return;
-            }
-            if (Utils.GetCoordCards().Count == 0)
-            {
-                return;
-            }
 
-            if (!Model.Main.CoordIsOne)
+            IEnumerator MyCoroutine()
             {
-                // 判断是否允许重复
-                if (Model.Main.CoordIsRepeat)
+                // 找出随机的人物
+                var charas = Utils.GetTreeCharaInfoDic().SelectMany(x => x.Value).Where(x => x.IsSelected).ToList();
+                var count = charas.Count();
+                if (count == 0)
                 {
-
+                    yield break;
                 }
-                var selectedCards = Utils.GetCoordCards().OrderBy(p => Guid.NewGuid()).Take(count);
-                var queueSelectedCards = new Queue<string>(selectedCards);
-                foreach (var chara in charas)
+                if (Utils.GetCoordCards().Count == 0)
                 {
+                    yield break;
+                }
 
-                    var obj = Studio.Studio.GetCtrlInfo(chara.Index) as OCIChar;
-                    if (obj != null)
+                if (!Model.Main.CoordIsOne)
+                {
+                    // 判断是否允许重复
+                    if (Model.Main.CoordIsRepeat)
                     {
-                        IEnumerator MyCoroutine()
+
+                    }
+                    var selectedCards = Utils.GetCoordCards().OrderBy(p => Guid.NewGuid()).Take(count);
+                    var queueSelectedCards = new Queue<string>(selectedCards);
+                    foreach (var chara in charas)
+                    {
+
+                        var obj = Studio.Studio.GetCtrlInfo(chara.Index) as OCIChar;
+                        if (obj != null)
                         {
+
                             if (queueSelectedCards.Count > 0)
                             {
                                 var card = queueSelectedCards.Dequeue();
                                 //LoadOutfit(card, obj);
                                 obj.LoadClothesFile(card);
+                                yield return null;
                             }
                             else
                             {
                                 StudioCharaShufflePlugin.Logger.LogWarning($"服装卡不够");
                             }
-                            yield return null;
+
                         }
-                        StartCoroutine(MyCoroutine());
                     }
                 }
-            }
-            else
-            {
-                var selectedCard = Utils.GetCoordCards().OrderBy(p => Guid.NewGuid()).FirstOrDefault();
-                if (selectedCard != null)
+                else
                 {
-                    foreach (var chara in charas)
+                    var selectedCard = Utils.GetCoordCards().OrderBy(p => Guid.NewGuid()).FirstOrDefault();
+                    if (selectedCard != null)
                     {
-                        var obj = Studio.Studio.GetCtrlInfo(chara.Index) as OCIChar;
-                        if (obj != null)
+                        foreach (var chara in charas)
                         {
-                            IEnumerator MyCoroutine()
+                            var obj = Studio.Studio.GetCtrlInfo(chara.Index) as OCIChar;
+                            if (obj != null)
                             {
+
                                 obj.LoadClothesFile(selectedCard);
                                 yield return null;
-                            }
-                            StartCoroutine(MyCoroutine());
-                        }
 
+                            }
+
+                        }
                     }
                 }
+
+
+                yield return null;
+
             }
+            StartCoroutine(MyCoroutine());
+
+
         }
 
-        private void RefreshCharaCards() {
+        private void RefreshCharaCards()
+        {
 
-            if (!Directory.Exists(Model.Main.CharaPath))
+            IEnumerator MyCoroutine()
             {
-                Model.Main.CharaPathIsOk = false;
-                Model.Main.CharaPathMessage = "目录不存在!";
-                Model.Main.CharaCount = 0;
-                return;
+                Model.Main.CharaPathMessage = "人物卡读取中...";
+                Model.Main.CharaPathIsLoading = true;
+
+                if (!Directory.Exists(Model.Main.CharaPath))
+                {
+                    Model.Main.CharaPathMessage = "目录不存在!";
+                    Model.Main.CharaCount = 0;
+                    Model.Main.CharaPathIsOk = false;
+                    Model.Main.CharaPathIsLoading = false;
+                    yield break;
+                }
+
+                string rootPath = Path.GetPathRoot(Model.Main.CharaPath);
+                // 检查所选目录是否为盘符根目录
+                if (Model.Main.CharaPath == rootPath)
+                {
+                    Model.Main.CharaPathMessage = "不允许设置为盘符根目录!";
+                    Model.Main.CharaCount = 0;
+                    Model.Main.CharaPathIsOk = false;
+                    Model.Main.CharaPathIsLoading = false;
+                    yield break;
+                }
+
+                var count = 0;
+                void DoBackgroundTask()
+                {
+                    count = Utils.BuildCharaCardPaths(Model.Main.CharaPath, Model.Main.CharaIsSub ? Model.Main.CharaSubDepth : 0);
+                }
+
+                Thread backgroundThread = new Thread(DoBackgroundTask);
+                backgroundThread.Start();
+
+                // 等待后台线程完成任务
+                while (backgroundThread.IsAlive)
+                {
+                    yield return null;
+                }
+                Model.Main.CharaPathIsLoading = false;
+
+
+                Model.Main.CharaCount = count;
+                if (count == 0)
+                {
+                    Model.Main.CharaPathMessage = "未找到人物卡!";
+                    Model.Main.CharaPathIsOk = false;
+                }
+                else
+                {
+                    Model.Main.CharaPathIsOk = true;
+                }
+                StudioCharaShufflePlugin.Logger.LogInfo($"识别人物卡数量：{count}");
+
             }
 
-            string rootPath = Path.GetPathRoot(Model.Main.CharaPath);
-            // 检查所选目录是否为盘符根目录
-            if (Model.Main.CharaPath == rootPath)
-            {
-                Model.Main.CharaPathIsOk = false;
-                Model.Main.CharaPathMessage = "不允许设置为盘符根目录!";
-                Model.Main.CharaCount = 0;
-                return;
-            }
-
-            var count = Utils.BuildCharaCardPaths(Model.Main.CharaPath, Model.Main.CharaIsSub ? Model.Main.CharaSubDepth : 0);
-            Model.Main.CharaCount = count;
-            if (count == 0)
-            {
-                Model.Main.CharaPathMessage = "未找到人物卡!";
-                Model.Main.CharaPathIsOk = false;
-            }
-            else
-            {
-                Model.Main.CharaPathIsOk = true;
-            }
-            StudioCharaShufflePlugin.Logger.LogInfo($"识别人物卡数量：{count}");
-
-        
+            StartCoroutine(MyCoroutine());
         }
         private void RefreshCoordCards()
         {
-            if (!Directory.Exists(Model.Main.CoordPath))
+
+            IEnumerator MyCoroutine()
             {
-                Model.Main.CoordPathIsOk = false;
-                Model.Main.CoordPathMessage = "目录不存在!";
-                Model.Main.CoordCount = 0;
-                return;
+                Model.Main.CharaPathIsLoading = true;
+                Model.Main.CoordPathMessage = "服装卡读取中...";
+
+                if (!Directory.Exists(Model.Main.CoordPath))
+                {
+                    Model.Main.CoordPathMessage = "目录不存在!";
+                    Model.Main.CoordCount = 0;
+                    Model.Main.CoordPathIsOk = false;
+                    Model.Main.CharaPathIsLoading = false;
+                    yield break;
+                }
+
+                string rootPath = Path.GetPathRoot(Model.Main.CoordPath);
+                // 检查所选目录是否为盘符根目录
+                if (Model.Main.CoordPath == rootPath)
+                {
+                    Model.Main.CoordPathMessage = "不允许设置为盘符根目录!";
+                    Model.Main.CoordCount = 0;
+                    Model.Main.CoordPathIsOk = false;
+                    Model.Main.CharaPathIsLoading = false;
+                    yield break;
+                }
+
+                var count = 0;
+                void DoBackgroundTask()
+                {
+                    count = Utils.BuildCoordCardPaths(Model.Main.CoordPath, Model.Main.CoordIsSub ? Model.Main.CoordSubDepth : 0);
+                }
+
+                Thread backgroundThread = new Thread(DoBackgroundTask);
+                backgroundThread.Start();
+
+                // 等待后台线程完成任务
+                while (backgroundThread.IsAlive)
+                {
+                    yield return null;
+                }
+                Model.Main.CharaPathIsLoading = false;
+                Model.Main.CoordCount = count;
+                if (count == 0)
+                {
+                    Model.Main.CoordPathMessage = "未找到服装卡!";
+                    Model.Main.CoordPathIsOk = false;
+                }
+                else
+                {
+                    Model.Main.CoordPathIsOk = true;
+                }
+                StudioCharaShufflePlugin.Logger.LogInfo($"识别服装卡数量：{count}");
+
             }
 
-            string rootPath = Path.GetPathRoot(Model.Main.CoordPath);
-            // 检查所选目录是否为盘符根目录
-            if (Model.Main.CoordPath == rootPath)
-            {
-                Model.Main.CoordPathIsOk = false;
-                Model.Main.CoordPathMessage = "不允许设置为盘符根目录!";
-                Model.Main.CoordCount = 0;
-                return;
-            }
-
-            var count = Utils.BuildCoordCardPaths(Model.Main.CoordPath, Model.Main.CoordIsSub ? Model.Main.CoordSubDepth : 0);
-            Model.Main.CoordCount = count;
-            if (count == 0)
-            {
-                Model.Main.CoordPathMessage = "未找到服装卡!";
-                Model.Main.CoordPathIsOk = false;
-            }
-            else
-            {
-                Model.Main.CoordPathIsOk = true;
-            }
-            StudioCharaShufflePlugin.Logger.LogInfo($"识别服装卡数量：{count}");
+            StartCoroutine(MyCoroutine());
         }
+
+        //private void saveLastConfig()
+        //{
+        //    JsonUtility.FromJson<RootDate>
+        //}
 
         // Localize
         public Dictionary<string, string> curLocalizationDict;
@@ -966,6 +1136,7 @@ namespace HS2_StudioCharaShuffle
         {
             CallWearCustom(filePath, outfit, chara);
         }
+
         private static readonly bool[] outfit = new bool[5] { false, false, false, true, true };
 
 

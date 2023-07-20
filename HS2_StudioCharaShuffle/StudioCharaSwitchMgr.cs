@@ -54,31 +54,31 @@ namespace HS2_StudioCharaShuffle
         }
 
 
-        public CharaController GetEditorController(OCIChar ociTarget)
-        {
-            if (ociTarget == null)
-            {
-                return null;
-            }
-            if (!charaEditorCtrlDict.ContainsKey(ociTarget))
-            {
-                charaEditorCtrlDict[ociTarget] = new CharaController(ociTarget);
-                charaEditorCtrlDict[ociTarget].Initialize();
-            }
-            return charaEditorCtrlDict[ociTarget];
-        }
+        //public CharaController GetEditorController(OCIChar ociTarget)
+        //{
+        //    if (ociTarget == null)
+        //    {
+        //        return null;
+        //    }
+        //    if (!charaEditorCtrlDict.ContainsKey(ociTarget))
+        //    {
+        //        charaEditorCtrlDict[ociTarget] = new CharaController(ociTarget);
+        //        charaEditorCtrlDict[ociTarget].Initialize();
+        //    }
+        //    return charaEditorCtrlDict[ociTarget];
+        //}
 
-        public CharaController GetEditorController(ChaControl chaCtrl)
-        {
-            foreach (OCIChar ociChar in charaEditorCtrlDict.Keys)
-            {
-                if (ociChar.charInfo == chaCtrl)
-                {
-                    return charaEditorCtrlDict[ociChar];
-                }
-            }
-            return null;
-        }
+        //public CharaController GetEditorController(ChaControl chaCtrl)
+        //{
+        //    foreach (OCIChar ociChar in charaEditorCtrlDict.Keys)
+        //    {
+        //        if (ociChar.charInfo == chaCtrl)
+        //        {
+        //            return charaEditorCtrlDict[ociChar];
+        //        }
+        //    }
+        //    return null;
+        //}
 
     }
 }

@@ -14,12 +14,13 @@ namespace HS2_StudioCharaShuffle
 
 
     [BepInPlugin(GUID, Name, Version)]
+    [HelpURL("https://github.com/cheetman/hs2-studiocharashuffle")]
     public class StudioCharaShufflePlugin : BaseUnityPlugin
     {
-
+        // 测试用
         //static void Main(string[] args)
         //{
-        //    Utils.GetPng();
+            
         //}
 
 

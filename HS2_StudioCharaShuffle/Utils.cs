@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using static Studio.TreeNodeObject;
@@ -206,15 +207,26 @@ namespace HS2_StudioCharaShuffle
         }
 
 
-        static public string GetCharaPath(byte sex)
+        static public DirectoryInfo GetCharaPath(byte sex)
         {
-            //string exportPath = StudioCharaEditor.CharaExportPath.Value;
             string defPath = Path.Combine(Paths.GameRootPath, sex == 0 ? "UserData\\chara\\male" : "UserData\\chara\\female");
-            //if (exportPath.Contains(StudioCharaEditor.DefaultPathMacro))
-            //{
-            //    exportPath = exportPath.Replace(StudioCharaEditor.DefaultPathMacro, defPath);
-            //}
-            return defPath;
+
+            return new DirectoryInfo(defPath);
+        }
+
+        static public DirectoryInfo GetCoordPath(byte sex)
+        {
+            string defPath = Path.Combine(Paths.GameRootPath, sex == 0 ? "UserData\\coordinate\\male" : "UserData\\coordinate\\female");
+            return new DirectoryInfo(defPath);
+        }
+        static public string GetDllPath()
+        {
+            //string dllPath = Path.GetDirectoryName(new Uri(this.GetType().Assembly.CodeBase).AbsolutePath);
+            string codeBase = Assembly.GetExecutingAssembly().CodeBase;
+            UriBuilder uri = new UriBuilder(codeBase);
+            string path = Uri.UnescapeDataString(uri.Path);
+            string dllPath = Path.GetDirectoryName(path);
+            return dllPath;
         }
 
         //static public Version loadVersion = new Version(ChaFileDefine.ChaFileCoordinateVersion.ToString());

@@ -80,6 +80,10 @@
       <HintPath>E:\HS2 [ArcticFox]\HoneySelect2_Data\Managed\UnityEngine.IMGUIModule.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="UnityEngine.JSONSerializeModule">
+      <HintPath>E:\HS2 [ArcticFox]\HoneySelect2_Data\Managed\UnityEngine.JSONSerializeModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CharaController.cs" />
