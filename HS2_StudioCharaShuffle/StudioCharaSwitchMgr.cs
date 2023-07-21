@@ -17,7 +17,6 @@ namespace HS2_StudioCharaShuffle
         public UI gui;
         public static StudioCharaShuffleMgr Instance { get; private set; }
 
-        public Dictionary<OCIChar, CharaController> charaEditorCtrlDict = new Dictionary<OCIChar, CharaController>();
 
         public static StudioCharaShuffleMgr Install(GameObject container)
         {

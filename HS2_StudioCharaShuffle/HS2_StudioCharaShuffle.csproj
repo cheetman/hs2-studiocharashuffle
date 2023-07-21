@@ -86,8 +86,6 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CharaController.cs" />
-    <Compile Include="CharaDetailInfo.cs" />
     <Compile Include="UI\UIModel.cs" />
     <Compile Include="UI\UI.cs" />
     <Compile Include="StudioCharaSwitchMgr.cs" />

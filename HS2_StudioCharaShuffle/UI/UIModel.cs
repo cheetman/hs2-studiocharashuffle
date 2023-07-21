@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using UnityEngine;
 
 namespace HS2_StudioCharaShuffle
 {
@@ -21,38 +22,43 @@ namespace HS2_StudioCharaShuffle
 
         public MainModel Main { get; set; } = new MainModel();
 
+
+        [Serializable]
         public class MainModel
         {
 
-            public string CharaPath { get; set; }
-            public int CharaCount { get; set; }
-            public bool CharaPathIsOk { get; set; } = true;
-            public bool CharaPathIsLoading { get; set; } = false;
-            public string CharaPathMessage { get; set; }
-            public bool CharaIsSub { get; set; }
-            public int CharaSubDepth { get; set; } = 2;
-            public bool CharaIsAuto { get; set; }
-            public bool CharaIsAutoRunning { get; set; }
-            public bool CharaFaceIsAuto { get; set; }
-            public bool CharaFaceIsAutoRunning { get; set; }
-            public int CharaAutoTime { get; set; } = 20;
-            public int CharaFaceAutoTime { get; set; } = 20;
+            public string CharaPath;
+            public int CharaCount;
+            public bool CharaPathIsOk  = true;
+            public bool CharaPathIsLoading = false;
+            public string CharaPathMessage;
+            public bool CharaIsSub;
+            public int CharaSubDepth = 2;
+            public bool CharaIsAuto;
+            public bool CharaIsAutoRunning;
+            public bool CharaFaceIsAuto;
+            public bool CharaFaceIsAutoRunning;
+            public int CharaAutoTime = 20;
+            public int CharaFaceAutoTime = 20;
 
 
-            public string CoordPath { get; set; }
-            public int CoordCount { get; set; }
+            public string CoordPath;
+            public int CoordCount;
 
-            public bool CoordPathIsOk { get; set; } = true;
-            public bool CoordPathIsLoading { get; set; } = false;
-            public string CoordPathMessage { get; set; }
+            public bool CoordPathIsOk  = true;
+            public bool CoordPathIsLoading  = false;
+            public string CoordPathMessage;
 
-            public bool CoordIsSub { get; set; }
-            public int CoordSubDepth { get; set; } = 2;
-            public bool CoordIsAuto { get; set; }
-            public bool CoordIsAutoRunning { get; set; }
-            public int CoordAutoTime { get; set; } = 20;
-            public bool CoordIsOne { get; set; }
-            public bool CoordIsRepeat { get; set; }
+            public bool CoordIsSub;
+            public int CoordSubDepth = 2;
+            public bool CoordIsAuto;
+            public bool CoordIsAutoRunning;
+            public int CoordAutoTime  = 20;
+            public bool CoordIsOne;
+            public bool CoordIsRepeat;
+
+            public byte[] ClothStatus = new byte[8] { 0, 0, 0, 0, 0, 0, 0, 0 };
+            public byte[] ClothStatusMan = new byte[4] { 0, 0, 0, 0};
 
 
         }

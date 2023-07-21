@@ -1,5 +1,7 @@
 ﻿using AIChara;
 using BepInEx.Logging;
+using KKAPI.Studio;
+using KKAPI.Studio.SaveLoad;
 using KKAPI.Utilities;
 using Studio;
 using System;
@@ -61,6 +63,23 @@ namespace HS2_StudioCharaShuffle
             Model.Main.CharaPathIsOk = true;
             Model.Main.CoordPath = Utils.GetCoordPath(1).FullName;
             Model.Main.CoordPathIsOk = true;
+
+            StudioSaveLoadApi.SceneLoad += (object sender, SceneLoadEventArgs e) =>
+            {
+                mySelectedTreeIndexs.Clear();
+                if (IsVisible)
+                {
+                    Utils.BuildTreeCharaInfoList();
+                }
+                StudioCharaShufflePlugin.Logger.Log(LogLevel.Warning, " StudioAPI.StudioLoadedChanged");
+
+            };
+
+            // 没用
+            //StudioAPI.StudioLoadedChanged += (object sender, EventArgs e) =>
+            //{
+            //};
+
 
             Studio.Studio.Instance.treeNodeCtrl.onSelect += (TreeNodeObject treeNodeObject) =>
             {
@@ -771,11 +790,95 @@ namespace HS2_StudioCharaShuffle
                 GUILayout.EndHorizontal();
             }
 
-   
+
 
 
             GUI.enabled = true;
 
+
+
+            if (GUILayout.Button("测试", GUILayout.Width(50)))
+            {
+
+
+            }
+
+            GUILayout.BeginHorizontal();
+            GUILayout.Label(LC("其他"), GUI.skin.box);
+            GUILayout.EndHorizontal();
+
+
+            GUILayout.Label(LC("默认服装[女]"), GUILayout.Width(80));
+            var rowIndex = 0;
+            foreach (var item in categoryName)
+            {
+                GUILayout.BeginHorizontal();
+                GUILayout.Label(item.Name, GUILayout.Width(80));
+
+                if (item.Value == 3)
+                {
+                    foreach (var index in Enumerable.Range(0, item.Value))
+                    {
+                        Color oldColor2 = GUI.color;
+                        if (Convert.ToByte(index) == Model.Main.ClothStatus[rowIndex])
+                            GUI.color = Color.green;
+                        if (GUILayout.Button(ClothStatus3Name[index], GUILayout.Width(50)))
+                            Model.Main.ClothStatus[rowIndex] = Convert.ToByte(index);
+                        GUI.color = oldColor2;
+                    }
+                }
+                else
+                {
+                    foreach (var index in Enumerable.Range(0, item.Value))
+                    {
+                        Color oldColor2 = GUI.color;
+                        if (Convert.ToByte(index) == Model.Main.ClothStatus[rowIndex])
+                            GUI.color = Color.green;
+                        if (GUILayout.Button(ClothStatus2Name[index], GUILayout.Width(50)))
+                            Model.Main.ClothStatus[rowIndex] = Convert.ToByte(index);
+                        GUI.color = oldColor2;
+                    }
+                }
+
+
+
+
+                GUILayout.EndHorizontal();
+                rowIndex++;
+            }
+
+
+            //if (GUILayout.Button(LC("全脱"), GUILayout.Width(50)))
+            //{
+
+            //    var charas = Utils.GetTreeCharaInfoDic().SelectMany(x => x.Value).Where(x => x.IsSelected).ToList();
+            //    var count = charas.Count();
+            //    if (count == 0)
+            //    {
+            //        return;
+            //    }
+            //    var chara = charas.First();
+            //    var obj = Studio.Studio.GetCtrlInfo(chara.Index) as OCIChar;
+            //    if (obj != null)
+            //    {
+            //        var control = obj.GetChaControl();
+            //        //control.SetClothesState(0,0,true); // 0 是 top
+            //        var b = control.fileStatus.clothesState[0];
+
+            //        StudioCharaShufflePlugin.Logger.LogWarning(b);
+            //        StudioCharaShufflePlugin.Logger.LogWarning(Convert.ToInt32(b));
+
+            //        CmpClothes cmpCloth = control.cmpClothes[0];
+
+
+
+
+            //        //string[] threeStatusClothStatusName = { "ON", "Half", "OFF" };
+            //        //string[] twoStatusClothStatusName = { "ON", "OFF" };
+            //        //bool isThreeStatus = charInfo.sex == 1 && (index != 4 && index != 6 && index != 7);
+
+            //    }
+            //}
 
 
 
@@ -795,6 +898,39 @@ namespace HS2_StudioCharaShuffle
                 IsVisible = false;
             }
             GUI.color = oldColor;
+        }
+
+        string[] ClothStatus3Name = { "穿", "脱", "裸" };
+        string[] ClothStatus2Name = { "穿", "裸" };
+        NameValue[] categoryName = { new NameValue("上装", 3), new NameValue("裤子", 3), new NameValue("内衣", 3), new NameValue("内裤", 3), new NameValue("手套", 2), new NameValue("连裤袜", 3), new NameValue("短袜", 2), new NameValue("鞋子", 2) };
+        string[] categoryMName = { "上衣", "下装", "手套", "鞋子" };
+
+        private ChaListDefine.CategoryNo[] MALE_CLOTH_CATEGORYNO = new ChaListDefine.CategoryNo[] {
+                ChaListDefine.CategoryNo.mo_top,
+                ChaListDefine.CategoryNo.mo_bot,
+                ChaListDefine.CategoryNo.mo_gloves,
+                ChaListDefine.CategoryNo.mo_shoes
+            };
+        private ChaListDefine.CategoryNo[] FEMALE_CLOTH_CATEGORYNO = new ChaListDefine.CategoryNo[] {
+                ChaListDefine.CategoryNo.fo_top,
+                ChaListDefine.CategoryNo.fo_bot,
+                ChaListDefine.CategoryNo.fo_inner_t,
+                ChaListDefine.CategoryNo.fo_inner_b,
+                ChaListDefine.CategoryNo.fo_gloves,
+                ChaListDefine.CategoryNo.fo_panst,
+                ChaListDefine.CategoryNo.fo_socks,
+                ChaListDefine.CategoryNo.fo_shoes
+            };
+
+        private class NameValue
+        {
+            public string Name { get; set; }
+            public int Value { get; set; }
+            public NameValue(string Name, int Value)
+            {
+                this.Name = Name;
+                this.Value = Value;
+            }
         }
 
         private void RandomChara()
@@ -833,6 +969,16 @@ namespace HS2_StudioCharaShuffle
                                 var card = queueSelectedCards.Dequeue();
                                 //obj.ChangeChara(card);
                                 LoadAll(card, obj);
+                                // 更新衣服状态
+                                if (obj.sex == 1)
+                                {
+                                    var control = obj.GetChaControl();
+                                    var index = 0;
+                                    foreach (var state in Model.Main.ClothStatus)
+                                    {
+                                        control.SetClothesState(index++, state, true);
+                                    }
+                                }
                                 yield return null;
                             }
                             else
@@ -884,6 +1030,9 @@ namespace HS2_StudioCharaShuffle
 
                         if (queueSelectedCards.Count > 0)
                         {
+                            //obj.charInfo;
+                            //obj.GetChaControl;
+
                             var card = queueSelectedCards.Dequeue();
                             LoadAnatomy(card, obj);
                             yield return null;
@@ -946,6 +1095,16 @@ namespace HS2_StudioCharaShuffle
                                 var card = queueSelectedCards.Dequeue();
                                 //LoadOutfit(card, obj);
                                 obj.LoadClothesFile(card);
+                                // 更新衣服状态
+                                if (obj.sex == 1)
+                                {
+                                    var control = obj.GetChaControl();
+                                    var index = 0;
+                                    foreach (var state in Model.Main.ClothStatus)
+                                    {
+                                        control.SetClothesState(index++, state, true);
+                                    }
+                                }
                                 yield return null;
                             }
                             else
@@ -1051,7 +1210,7 @@ namespace HS2_StudioCharaShuffle
 
             IEnumerator MyCoroutine()
             {
-                Model.Main.CharaPathIsLoading = true;
+                Model.Main.CoordPathIsLoading = true;
                 Model.Main.CoordPathMessage = "服装卡读取中...";
 
                 if (!Directory.Exists(Model.Main.CoordPath))
@@ -1059,7 +1218,7 @@ namespace HS2_StudioCharaShuffle
                     Model.Main.CoordPathMessage = "目录不存在!";
                     Model.Main.CoordCount = 0;
                     Model.Main.CoordPathIsOk = false;
-                    Model.Main.CharaPathIsLoading = false;
+                    Model.Main.CoordPathIsLoading = false;
                     yield break;
                 }
 
@@ -1070,7 +1229,7 @@ namespace HS2_StudioCharaShuffle
                     Model.Main.CoordPathMessage = "不允许设置为盘符根目录!";
                     Model.Main.CoordCount = 0;
                     Model.Main.CoordPathIsOk = false;
-                    Model.Main.CharaPathIsLoading = false;
+                    Model.Main.CoordPathIsLoading = false;
                     yield break;
                 }
 
@@ -1088,7 +1247,7 @@ namespace HS2_StudioCharaShuffle
                 {
                     yield return null;
                 }
-                Model.Main.CharaPathIsLoading = false;
+                Model.Main.CoordPathIsLoading = false;
                 Model.Main.CoordCount = count;
                 if (count == 0)
                 {
@@ -1106,15 +1265,36 @@ namespace HS2_StudioCharaShuffle
             StartCoroutine(MyCoroutine());
         }
 
-        //private void saveLastConfig()
-        //{
-        //    JsonUtility.FromJson<RootDate>
-        //}
+        private void SaveLastConfig()
+        {
+            var path = Path.Combine(Utils.GetDllPath(), "HS2_StudioCharaShuffle.json");
+            var content = JsonUtility.ToJson(Model.Main);
+            if (Directory.Exists(Path.GetDirectoryName(path)))
+            {
+                File.WriteAllText(path, content);
+            }
+        }
+
+        private void LoadLastConfig()
+        {
+            var path = Path.Combine(Utils.GetDllPath(), "HS2_StudioCharaShuffle.json");
+            if (File.Exists(path))
+            {
+                var content = File.ReadAllText(path);
+                var obj = JsonUtility.FromJson<UIModel.MainModel>(content);
+                if(obj != null)
+                {
+
+                }
+            }
+        
+        }
 
         // Localize
         public Dictionary<string, string> curLocalizationDict;
         private string LC(string org)
         {
+            return org;
             if (curLocalizationDict != null && curLocalizationDict.ContainsKey(org) && !string.IsNullOrWhiteSpace(curLocalizationDict[org]))
                 return curLocalizationDict[org];
             else
