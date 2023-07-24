@@ -40,9 +40,6 @@ namespace HS2_StudioCharaShuffle
         private UIModel Model;
 
 
-
-
-        private OCIChar ociTarget;
         private int[] selectedTreeIndexs = new int[0];
         private int selectedTreeIndex = 0;
         private HashSet<int> mySelectedTreeIndexs = new HashSet<int>();
@@ -58,11 +55,12 @@ namespace HS2_StudioCharaShuffle
 
 
             Model = UIModel.GetInstance();
-
             Model.Main.CharaPath = Utils.GetCharaPath(1).FullName;
             Model.Main.CharaPathIsOk = true;
             Model.Main.CoordPath = Utils.GetCoordPath(1).FullName;
             Model.Main.CoordPathIsOk = true;
+            LoadLastConfig();
+
 
             StudioSaveLoadApi.SceneLoad += (object sender, SceneLoadEventArgs e) =>
             {
@@ -151,9 +149,6 @@ namespace HS2_StudioCharaShuffle
             {
                 case GuiModeType.MAIN:
                     guiEditorMain();
-                    break;
-                case GuiModeType.SAVE:
-                    //guiSave();
                     break;
                 default:
                     break;
@@ -797,11 +792,11 @@ namespace HS2_StudioCharaShuffle
 
 
 
-            if (GUILayout.Button("测试", GUILayout.Width(50)))
-            {
+            //if (GUILayout.Button("测试", GUILayout.Width(50)))
+            //{
 
 
-            }
+            //}
 
             GUILayout.BeginHorizontal();
             GUILayout.Label(LC("其他"), GUI.skin.box);
@@ -848,37 +843,11 @@ namespace HS2_StudioCharaShuffle
             }
 
 
-            //if (GUILayout.Button(LC("全脱"), GUILayout.Width(50)))
-            //{
-
-            //    var charas = Utils.GetTreeCharaInfoDic().SelectMany(x => x.Value).Where(x => x.IsSelected).ToList();
-            //    var count = charas.Count();
-            //    if (count == 0)
-            //    {
-            //        return;
-            //    }
-            //    var chara = charas.First();
-            //    var obj = Studio.Studio.GetCtrlInfo(chara.Index) as OCIChar;
-            //    if (obj != null)
-            //    {
-            //        var control = obj.GetChaControl();
-            //        //control.SetClothesState(0,0,true); // 0 是 top
-            //        var b = control.fileStatus.clothesState[0];
-
-            //        StudioCharaShufflePlugin.Logger.LogWarning(b);
-            //        StudioCharaShufflePlugin.Logger.LogWarning(Convert.ToInt32(b));
-
-            //        CmpClothes cmpCloth = control.cmpClothes[0];
-
-
-
-
-            //        //string[] threeStatusClothStatusName = { "ON", "Half", "OFF" };
-            //        //string[] twoStatusClothStatusName = { "ON", "OFF" };
-            //        //bool isThreeStatus = charInfo.sex == 1 && (index != 4 && index != 6 && index != 7);
-
-            //    }
-            //}
+      
+            if (GUILayout.Button("保存配置", GUILayout.Width(80)))
+            {
+                SaveLastConfig();
+            }
 
 
 
@@ -1277,6 +1246,7 @@ namespace HS2_StudioCharaShuffle
 
         private void LoadLastConfig()
         {
+
             var path = Path.Combine(Utils.GetDllPath(), "HS2_StudioCharaShuffle.json");
             if (File.Exists(path))
             {
@@ -1284,7 +1254,23 @@ namespace HS2_StudioCharaShuffle
                 var obj = JsonUtility.FromJson<UIModel.MainModel>(content);
                 if(obj != null)
                 {
+                    if(obj.CharaPathIsOk && !string.IsNullOrWhiteSpace(obj.CharaPath))
+                    {
+                        Model.Main.CharaPath = obj.CharaPath;
+                        Model.Main.CharaCount = obj.CharaCount;
+                    }
 
+                    if (obj.CoordPathIsOk && !string.IsNullOrWhiteSpace(obj.CoordPath))
+                    {
+                        Model.Main.CoordPath = obj.CoordPath;
+                        Model.Main.CoordCount = obj.CoordCount;
+                    }
+                    Model.Main.CharaIsSub = obj.CharaIsSub;
+                    Model.Main.CoordIsSub = obj.CoordIsSub;
+                    Model.Main.CharaSubDepth = obj.CharaSubDepth;
+                    Model.Main.CoordSubDepth = obj.CoordSubDepth;
+                    Model.Main.CoordIsOne = obj.CoordIsOne;
+                    Model.Main.CoordIsRepeat = obj.CoordIsRepeat;
                 }
             }
         
