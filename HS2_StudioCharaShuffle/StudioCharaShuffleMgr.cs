@@ -47,37 +47,7 @@ namespace HS2_StudioCharaShuffle
             gui = new GameObject("GUI").AddComponent<UI>();
             gui.transform.parent = base.transform;
             gui.IsVisible = false;
-            //Console.WriteLine("StudioCharaEditor CharaEditorMgr Started.");
             StudioCharaShufflePlugin.Logger.LogInfo("StudioCharaSwitchMgr Started.");
-            // check extra plugins
         }
-
-
-        //public CharaController GetEditorController(OCIChar ociTarget)
-        //{
-        //    if (ociTarget == null)
-        //    {
-        //        return null;
-        //    }
-        //    if (!charaEditorCtrlDict.ContainsKey(ociTarget))
-        //    {
-        //        charaEditorCtrlDict[ociTarget] = new CharaController(ociTarget);
-        //        charaEditorCtrlDict[ociTarget].Initialize();
-        //    }
-        //    return charaEditorCtrlDict[ociTarget];
-        //}
-
-        //public CharaController GetEditorController(ChaControl chaCtrl)
-        //{
-        //    foreach (OCIChar ociChar in charaEditorCtrlDict.Keys)
-        //    {
-        //        if (ociChar.charInfo == chaCtrl)
-        //        {
-        //            return charaEditorCtrlDict[ociChar];
-        //        }
-        //    }
-        //    return null;
-        //}
-
     }
 }

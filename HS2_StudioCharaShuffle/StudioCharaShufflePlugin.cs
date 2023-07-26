@@ -20,7 +20,7 @@ namespace HS2_StudioCharaShuffle
         // 测试用
         //static void Main(string[] args)
         //{
-            
+
         //}
 
 
@@ -35,9 +35,8 @@ namespace HS2_StudioCharaShuffle
 
 
 
-        public static ConfigEntry<int> UIHeight { get; private set; }
 
-        public static ConfigEntry<string> UIPath { get; private set; }
+        //public static ConfigEntry<string> UIPath { get; private set; }
         public static ConfigEntry<KeyboardShortcut> UIHotKeyShow { get; private set; }
         public static ConfigEntry<KeyboardShortcut> UIHotKey1 { get; private set; }
         public static ConfigEntry<KeyboardShortcut> UIHotKey2 { get; private set; }
@@ -50,35 +49,20 @@ namespace HS2_StudioCharaShuffle
             Logger = base.Logger;
 
 
-            UIPath = Config.Bind<string>("路径", "人物路径", "默认值", "人物路径");
 
             UIHotKeyShow = Config.Bind("General", "快捷键", new KeyboardShortcut(KeyCode.S, KeyCode.LeftShift), "Toggles the main UI on and off.");
-            //UIHotKey1 = Config.Bind("General", "随机人物快捷键", new KeyboardShortcut(KeyCode.KeypadDivide, KeyCode.LeftShift), "Toggles the main UI on and off.");
-            //UIHotKey2 = Config.Bind("General", "随机外观快捷键", new KeyboardShortcut(KeyCode.KeypadMultiply, KeyCode.LeftShift), "Toggles the main UI on and off.");
-            //UIHotKey3 = Config.Bind("General", "随机服装快捷键", new KeyboardShortcut(KeyCode.KeypadMinus, KeyCode.LeftShift), "Toggles the main UI on and off.");
-            UIHotKey1 = Config.Bind("General", "随机人物快捷键", new KeyboardShortcut(KeyCode.KeypadDivide), "Toggles the main UI on and off.");
-            UIHotKey2 = Config.Bind("General", "随机外观快捷键", new KeyboardShortcut(KeyCode.KeypadMultiply), "Toggles the main UI on and off.");
-            UIHotKey3 = Config.Bind("General", "随机服装快捷键", new KeyboardShortcut(KeyCode.KeypadMinus), "Toggles the main UI on and off.");
-
-
+            UIHotKey1 = Config.Bind("General", "随机人物快捷键", new KeyboardShortcut(KeyCode.KeypadDivide), "");
+            UIHotKey2 = Config.Bind("General", "随机外观快捷键", new KeyboardShortcut(KeyCode.KeypadMultiply), "");
+            UIHotKey3 = Config.Bind("General", "随机服装快捷键", new KeyboardShortcut(KeyCode.KeypadMinus), "");
 
         }
 
         private void Awake()
         {
-
-
             var gameObject = new GameObject(Name);
             DontDestroyOnLoad(gameObject);
             StudioCharaShuffleMgr.Install(gameObject);
-
-
-
         }
-
-
-
-
 
     }
 }

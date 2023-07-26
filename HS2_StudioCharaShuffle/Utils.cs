@@ -63,8 +63,6 @@ namespace HS2_StudioCharaShuffle
         {
             try
             {
-                // 设置最大深度为 3
-                //int maxDepth = maxDepth;
 
                 // 获取当前目录下的所有 .png 文件
                 string[] pngFiles = Directory.GetFiles(directory, "*.png");
@@ -145,7 +143,6 @@ namespace HS2_StudioCharaShuffle
         {
             return TreeCharaInfosDic;
         }
-
 
         public static void BuildTreeCharaInfoList()
         {
@@ -242,7 +239,6 @@ namespace HS2_StudioCharaShuffle
                     if (num != 0)
                     {
                         //item.GetPngData(br, num);
-
                         if (noLoadPNG)
                         {
                             br.BaseStream.Seek(num, SeekOrigin.Current);
@@ -253,7 +249,6 @@ namespace HS2_StudioCharaShuffle
                         }
                         if (br.BaseStream.Length - br.BaseStream.Position == 0L)
                         {
-                            //lastLoadErrorCode = -5;
                             return false;
                         }
                     }
@@ -315,7 +310,6 @@ namespace HS2_StudioCharaShuffle
                         }
                         if (br.BaseStream.Length - br.BaseStream.Position == 0L)
                         {
-                            //lastLoadErrorCode = -5;
                             return false;
                         }
                     }

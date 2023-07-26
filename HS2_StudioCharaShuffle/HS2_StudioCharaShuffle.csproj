@@ -88,7 +88,7 @@
   <ItemGroup>
     <Compile Include="UI\UIModel.cs" />
     <Compile Include="UI\UI.cs" />
-    <Compile Include="StudioCharaSwitchMgr.cs" />
+    <Compile Include="StudioCharaShuffleMgr.cs" />
     <Compile Include="StudioCharaShufflePlugin.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Utils.cs" />
