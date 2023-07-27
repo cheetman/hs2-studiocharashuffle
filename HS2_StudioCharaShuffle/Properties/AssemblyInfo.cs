@@ -6,7 +6,7 @@ using System.Runtime.InteropServices;
 // 控制。更改这些特性值可修改
 // 与程序集关联的信息。
 [assembly: AssemblyTitle("HS2_StudioCharaShuffle")]
-[assembly: AssemblyDescription("HS2随机换人")]
+[assembly: AssemblyDescription("HS2随机换人[工作室]")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Cheatman")]
 [assembly: AssemblyProduct("HS2_StudioCharaShuffle")]
@@ -32,5 +32,5 @@ using System.Runtime.InteropServices;
 //可以指定所有这些值，也可以使用“生成号”和“修订号”的默认值
 //通过使用 "*"，如下所示:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("1.0.0.0")]
-[assembly: AssemblyFileVersion("1.0.0.0")]
+[assembly: AssemblyVersion("0.1.2.0")]
+[assembly: AssemblyFileVersion("0.1.2.0")]
