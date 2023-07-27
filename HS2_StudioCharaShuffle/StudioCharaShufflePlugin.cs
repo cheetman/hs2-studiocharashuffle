@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
+using static BepInEx.BepInDependency;
 
 namespace HS2_StudioCharaShuffle
 {
@@ -15,6 +16,8 @@ namespace HS2_StudioCharaShuffle
 
     [BepInPlugin(GUID, Name, Version)]
     [HelpURL("https://github.com/cheetman/hs2-studiocharashuffle")]
+    [BepInDependency("GarryWu.HS2WearCustom", DependencyFlags.HardDependency)]
+    [BepInProcess("StudioNEOV2.exe")]
     public class StudioCharaShufflePlugin : BaseUnityPlugin
     {
         // 测试用
@@ -27,7 +30,7 @@ namespace HS2_StudioCharaShuffle
 
         public const string GUID = "Cheatman.StudioCharaShuffle.HS2";
         public const string Name = "Studio Chara Shuffle";
-        public const string Version = "0.1.0";
+        public const string Version = "0.1.2";
 
         public static StudioCharaShufflePlugin Instance { get; private set; }
 
