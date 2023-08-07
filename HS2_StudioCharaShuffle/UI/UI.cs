@@ -806,8 +806,8 @@ namespace HS2_StudioCharaShuffle
                         if (queueSelectedCards.Count > 0)
                         {
                             var card = queueSelectedCards.Dequeue();
-                            //obj.ChangeChara(card);
-                            LoadAll(card, obj);
+                            obj.ChangeChara(card);
+                            //LoadAll(card, obj);
                             // 更新衣服状态
                             if (obj.sex == 1)
                             {
